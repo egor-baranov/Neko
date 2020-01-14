@@ -12,6 +12,7 @@ vector<Token> tokenizeFile(string url) {
   ofstream out("uncommented.txt");
   string tmp, use;
   bool commented = false;
+  // считывание из файла
   while (getline(file, tmp)) {
     // обработка комментариев
     use = "";
