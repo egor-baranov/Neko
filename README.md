@@ -1,6 +1,6 @@
 # Neko-Interpreter
 
-Neko is a scripting dynamical object-oriented and functional programming language inspired by Kotlin and Python, which is being developed for writing fast and powerful code in a short amount of time. It includes following techniques:
+Neko is a scripting programming language inspired by Kotlin and Python, which is being developed for writing fast and powerful code in a short amount of time. It includes following techniques:
 
 * Object-oriented and functional paradigms
 * Dynamical typing
