@@ -6,7 +6,7 @@ Neko is a scripting dynamical object-oriented and functional programming languag
 * Dynamical typing
 * Native work with threads and requests
 * Built-in long arithmetic
-* Сonvenient and easy to understand syntax
+* Convenient and easy to understand syntax
 
 ## JetBrains Space workspace
 
