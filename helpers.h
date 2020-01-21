@@ -5,33 +5,35 @@
 
 using namespace std;
 
-string lStrip(string s) {
+string lStrip(string input) {
   int left = 0;
-  for (int i = 0; i < s.size(); ++i) {
-    if (s[i] == '\r' or s[i] == ' ' or s[i] == '\n' or s[i] == '\t') ++left;
+  for (int i = 0; i < input.size(); ++i) {
+    if (input[i] == '\r' or input[i] == ' ' or input[i] == '\n' or input[i] == '\t')
+      ++left;
     else break;
   }
   string ret = "";
-  for (int i = left; i < s.size(); ++i)
-    ret += s[i];
+  for (int i = left; i < input.size(); ++i)
+    ret += input[i];
   return ret;
 }
 
-string rStrip(string s) {
+string rStrip(string input) {
   int right = 0;
-  for (int i = s.size() - 1; i >= 0; --i) {
-    if (s[i] == '\r' or s[i] == ' ' or s[i] == '\n' or s[i] == '\t') ++right;
+  for (int i = input.size() - 1; i >= 0; --i) {
+    if (input[i] == '\r' or input[i] == ' ' or input[i] == '\n' or input[i] == '\t')
+      ++right;
     else break;
   }
   string ret = "";
-  for (int i = 0; i < s.size() - right; ++i)
-    ret += s[i];
+  for (int i = 0; i < input.size() - right; ++i)
+    ret += input[i];
   return ret;
 }
 
 // убрать пробелы с обеих сторон. lStrip и rStrip соответственно убирают слева и справа
-string strip(string s) {
-  return lStrip(rStrip(s));
+string strip(string input) {
+  return lStrip(rStrip(input));
 }
 
 template<typename T>
@@ -47,30 +49,29 @@ string toString(char input) {
 }
 
 // разделение строки по char-у
-vector<string> split(string s, char sep = ' ') {
+vector<string> split(string input, set<char> sep) {
   vector<string> ret;
   string tmp = "";
-  for (char c : s) {
-    if (c == sep) {
-      if (!tmp.empty()) ret.push_back(tmp);
+  for (char c : input) {
+    if (sep.find(c) != sep.end()) {
+      if (not tmp.empty()) ret.push_back(tmp);
       tmp.clear();
       continue;
     }
     tmp += c;
   }
-  if (!tmp.empty()) ret.push_back(tmp);
+  if (not tmp.empty()) ret.push_back(tmp);
   return ret;
 }
 
-// разбиение выражения на токены
-// = split по set-у с дополнительным разбиением на пробелы
+// split, где сепараторы из сета sep добавляются в ret + удаление {' ', '\n', '\r'}
 vector<string> separate(string s, set<string> sep) {
   vector<string> ret;
   string tmp = "";
   for (char c: s) {
     if (sep.find(toString(c)) != sep.end()) {
       if (not tmp.empty()) {
-        for (string i : split(strip(tmp), ' '))
+        for (string i : split(strip(tmp), {' ', '\n', '\r'}))
           ret.push_back(i);
       }
       ret.push_back(toString(c));
@@ -78,7 +79,7 @@ vector<string> separate(string s, set<string> sep) {
     } else tmp += toString(c);
   }
   if (not tmp.empty()) {
-    for (string i : split(strip(tmp), ' '))
+    for (string i : split(strip(tmp), {' ', '\n', '\r'}))
       ret.push_back(i);
   }
   return ret;
@@ -95,17 +96,17 @@ string join(vector<string> v, char sep = ' ') {
   return join(v, string(1, sep));
 }
 
-bool isNumber(string s) {
-  if (s[0] > '9' or s[0] < '0') return false;
+bool isNumber(string input) {
+  if (input[0] > '9' or input[0] < '0') return false;
   int dots = 0;
-  for (int i = 1; i < s.size() - 1; ++i) {
-    if (s[i] == '.') {
+  for (int i = 1; i < input.size() - 1; ++i) {
+    if (input[i] == '.') {
       ++dots;
       continue;
     }
-    if (s[0] > '9' or s[0] < '0') return false;
+    if (input[i] > '9' or input[i] < '0') return false;
   }
-  if (s.back() > '9' or s.back() < '0') return false;
+  if (input.back() > '9' or input.back() < '0') return false;
   return dots <= 1;
 }
 

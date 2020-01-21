@@ -5,7 +5,7 @@
 
 using namespace std;
 
-vector<string> builtInTypes{
+set<string> builtInTypes{
   "int8", "int16", "int32", "int64",
   "uint8", "uint16", "uint32", "uint64",
   "char8", "char16", "char32", "uchar8", "uchar16", "uchar32",
@@ -37,7 +37,7 @@ set<string> Operators{
   "<<", ">>", "!", "="
 };
 
-set<string> Punctuation{
+set<string> Punctuations{
   "{", "}",
   "[", "]",
   "(", ")",
