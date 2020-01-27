@@ -2,6 +2,7 @@
 #define NEKO_INTERPRETER_HELPERS_H
 
 #include <bits/stdc++.h>
+#include "token.h"
 
 using namespace std;
 
@@ -65,23 +66,23 @@ vector<string> split(string input, set<char> sep) {
 }
 
 // split, где сепараторы из сета sep добавляются в ret + удаление {' ', '\n', '\r'}
-vector<string> separate(string s, set<string> sep) {
+vector<string> separate(string input, set<string> sep) {
   vector<string> ret;
   string tmp = "";
-  for (char c: s) {
+  for (char c: input) {
     if (sep.find(toString(c)) != sep.end()) {
-      if (not tmp.empty()) {
-        for (string i : split(strip(tmp), {' ', '\n', '\r'}))
+      if (not tmp.empty())
+        for (string i : split(strip(tmp), {' ', '\n', '\r'})) {
           ret.push_back(i);
-      }
+        }
       ret.push_back(toString(c));
-      tmp = "";
+      tmp.clear();
     } else tmp += toString(c);
   }
-  if (not tmp.empty()) {
-    for (string i : split(strip(tmp), {' ', '\n', '\r'}))
+  if (not tmp.empty())
+    for (string i : split(strip(tmp), {' ', '\n', '\r'})) {
       ret.push_back(i);
-  }
+    }
   return ret;
 }
 
@@ -108,6 +109,28 @@ bool isNumber(string input) {
   }
   if (input.back() > '9' or input.back() < '0') return false;
   return dots <= 1;
+}
+
+bool isLetter(char c) {
+  return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
+}
+
+bool isDigit(char c) {
+  return c >= '0' and c <= '9';
+}
+
+bool isDigitOrLetter(char c) {
+  return isDigit(c) or isLetter(c);
+}
+
+bool isCorrectName(string input) {
+  if (input.empty()) return false;
+  if (not isLetter(input[0]) and input[0] != '_')
+    return false;
+  for (int c: input)
+    if (!isDigit(c) and !isLetter(c) and c != '_')
+      return false;
+  return true;
 }
 
 #endif //NEKO_INTERPRETER_HELPERS_H

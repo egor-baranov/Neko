@@ -16,6 +16,7 @@ set<string> Keywords{
   "var", "val",
   "and", "or", "not", "in",
   "for", "while",
+  "if", "else",
   "get", "set",
   "fun", "lambda", "return", "break", "continue",
   "this",
@@ -41,7 +42,8 @@ set<string> Punctuations{
   "{", "}",
   "[", "]",
   "(", ")",
-  ",", ";", "."
+  ",", ";", ".", ":",
+  "\"", "\'"
 };
 
 #endif //NEKO_INTERPRETER_KEYWORDS_H

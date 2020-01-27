@@ -12,6 +12,7 @@ int main() {
 //    for (Token i : t) v.push_back(toString(i.type));
 //    cout << "[" + join(v, ", ") + "]" << endl;
 //  }
-  tokenizeFile("input.neko", "uncommented.txt");
+//  // tokenizeFile("input.neko", "uncommented.txt");
+  open("input.neko");
   return 0;
 }

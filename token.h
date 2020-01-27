@@ -13,7 +13,11 @@ enum tokenType {
   Keyword, // служебное ключевое слово: if, for, and, or
   Constant, // служебная константа: True, False, None. Строковые и численные литералы будут отправлены в undefined,
   Punctuation,
-  Number,
+  IntNumber,
+  FloatNumber,
+  StringLiteral,
+  Variable,
+  ClassName,
   Operation,
   None
 };
@@ -25,7 +29,7 @@ string toString(tokenType t) {
   if (t == Keyword) return "Keyword";
   if (t == Constant) return "Constant";
   if (t == Punctuation) return "Punctuation";
-  if (t == Number) return "Number";
+  if (t == IntNumber) return "IntNumber";
   if (t == Operation) return "Operation";
   return "Name";
 }
@@ -38,6 +42,7 @@ struct Token {
 };
 
 const Token endOfLine(EOL, "\n");
+const Token endOfFile(EOfF, "\n");
 
 Token getToken(string input) {
   input = strip(input);
@@ -50,7 +55,7 @@ Token getToken(string input) {
   if (Operators.find(input) != Operators.end())
     return Token(Operation, input);
   if (isNumber(input))
-    return Token(Number, input);
+    return Token(IntNumber, input);
   return Token(Name, input);
 }
 
@@ -63,8 +68,27 @@ vector<Token> tokenize(vector<string> input) {
   return ret;
 }
 
-vector<Token> tokenize(string input){
+vector<Token> tokenize(string input) {
   return tokenize(separate(input, unite(Punctuations, Operators)));
+}
+
+// скобки
+
+bool isLeftBracket(Token t) {
+  return t.source == "(" or t.source == "[" or t.source == "{";
+}
+
+bool isRightBracket(Token t) {
+  return t.source == ")" or t.source == "]" or t.source == "}";
+}
+
+bool isBracket(Token t) {
+  return isLeftBracket(t) or isRightBracket(t);
+}
+
+bool isBracketPair(Token left, Token right) {
+  return (left.source == "(" and right.source == ")") or
+         (left.source == "[" and right.source == "]") or (left.source == "{" and right.source == "}");
 }
 
 #endif //NEKO_INTERPRETER_TOKEN_H
