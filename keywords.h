@@ -9,33 +9,51 @@ set<string> builtInTypes{
   "int8", "int16", "int32", "int64",
   "uint8", "uint16", "uint32", "uint64",
   "char8", "char16", "char32", "uchar8", "uchar16", "uchar32",
-  "float", "lfloat"
+  "float", "lfloat",
+  "nullType", "string", "int", "char", "object"
+};
+
+set<string> BuiltInClasses{
+  "Object",
+  "Bool",
+  "String", "Char",
+  "Number", "Int", "Float", "Complex", "Matnum", "BigInt", "BigFloat", "BigComplex",
+  "Container", "Array", "List", "Set", "Map"
 };
 
 set<string> Keywords{
   "var", "val",
-  "and", "or", "not", "in",
+  "and", "or", "not", "xor", "in",
   "for", "while",
   "if", "else",
-  "get", "set",
-  "fun", "lambda", "return", "break", "continue",
-  "this",
-  "class", "as", "is", "new", "delete",
+  "get", "set", "field", "value",
+  "fun", "lambda", "return", "yield", "break", "continue",
+  "class", "this", "as", "is", "new", "delete",
   "public", "private", "protected",
-  "static", "sealed", "abstract"
+  "static", "sealed", "abstract",
+  "from", "import",
+  "thread"
 };
 
 set<string> Constants{
+  "true", "false", "null"
+};
+
+set<string> ObjectConstants{
   "None",
-  "True", "False"
+  "True", "False",
+  "Object"
 };
 
 set<string> Operators{
   "+", "-", "||", "*", "/",
+  "&", "|",
   "&&", "%", "=", "<", ">",
   "==", "!=", "<=", ">=",
   "++", "--",
-  "<<", ">>", "!", "="
+  "<<", ">>", "!", "=", "<<<", ">>>",
+  "^", "~",
+  "+=", "-=", "*=", "**=", "^=", "&=", "|=", "/=", "%="
 };
 
 set<string> Punctuations{
