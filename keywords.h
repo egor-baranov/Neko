@@ -5,7 +5,7 @@
 
 using namespace std;
 
-set<string> builtInTypes{
+set<string> BuiltInTypes{
   "int8", "int16", "int32", "int64",
   "uint8", "uint16", "uint32", "uint64",
   "char8", "char16", "char32", "uchar8", "uchar16", "uchar32",
@@ -32,7 +32,7 @@ set<string> Keywords{
   "public", "private", "protected",
   "static", "sealed", "abstract",
   "from", "import",
-  "thread"
+  "thread", "ref", "out"
 };
 
 set<string> Constants{

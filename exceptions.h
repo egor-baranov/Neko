@@ -291,13 +291,32 @@ Exception semanticErrorAnalysis(vector<Token> input) {
       if (i == 0) return Exception(SyntaxError, lineIndex);
       if (input[i - 1].isEndOfExpression() or input[i + 1].isEndOfExpression() or
           input[i - 1].isBinaryOperator() or input[i + 1].isBinaryOperator() or
-          input[i - 1].isLeftBracket() or input[i + 1].isRightBracket()) {
+          input[i - 1].isLeftBracket() or input[i + 1].isRightBracket() or input[i - 1].isUnaryOperator()) {
         return Exception(SyntaxError, lineIndex);
       }
     }
     if (token.isUnaryOperator()) {
       if (input[i + 1].isEndOfExpression() or input[i + 1].isRightBracket() or
           (input[i + 1].type == Punctuation and not input[i + 1].isBracket()))
+        return Exception(SyntaxError, lineIndex);
+    }
+    // SyntaxError для Range
+    if (token.type == Range) {
+      if (i == 0) return Exception(SyntaxError, lineIndex);
+      if (not input[i - 1].isRightBracket() and not input[i - 1].isObject())
+        return Exception(SyntaxError, lineIndex);
+      if (not input[i + 1].isLeftBracket() and not input[i + 1].isObject())
+        return Exception(SyntaxError, lineIndex);
+    }
+    if (token.source == "for") {
+      if (input[i + 2].type != Name) return Exception(SyntaxError, lineIndex);
+      if (input[i + 3].source != "in") return Exception(SyntaxError, lineIndex);
+    }
+    if (token.source == "in") {
+      if (i == 0) return Exception(SyntaxError, lineIndex);
+      if (not input[i - 1].isObject() and not input[i - 1].isRightBracket())
+        return Exception(SyntaxError, lineIndex);
+      if (not input[i + 1].isObject() and not input[i - 1].isLeftBracket())
         return Exception(SyntaxError, lineIndex);
     }
   }

@@ -93,7 +93,7 @@ vector<Token> parse(vector<Token> input) {
         ++i;
         continue;
       }
-      if (input[i - 1].type != Punctuation and token.source == "*" and input[i + 1].source == "*") {
+      if ((input[i - 1].type != Punctuation or input[i - 1].isRightBracket()) and token.source == "*" and input[i + 1].source == "*") {
         output.push_back(Token(ArithmeticOperator, "**"));
         ++i;
         continue;

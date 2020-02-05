@@ -183,9 +183,6 @@ bool isDigitOrLetter(char c) {
 
 bool isCorrectName(string input) {
   if (input.empty()) return false;
-  if (Keywords.find(input) != Keywords.end() or Constants.find(input) != Constants.end() or
-      ObjectConstants.find(input) != ObjectConstants.end() or builtInTypes.find(input) != builtInTypes.end())
-    return false;
   if (not isLetter(input[0]) and input[0] != '_')
     return false;
   for (int c: input)
