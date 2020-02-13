@@ -2,11 +2,13 @@
 #define NEKO_INTERPRETER_EXCEPTIONS_H
 
 #include <bits/stdc++.h>
-#include "helpers.h"
+#include "token.h"
 
 using namespace std;
 
 enum exType {
+  VariableDeclarationError,
+  FunctionDeclarationError,
   AssignmentError, // попытка присвоить значение к константе, а также некорректная инициализация
   OperatorPriorityError, // a *+^ b
   OperatorSequenceError, // = += *= 3
@@ -35,6 +37,10 @@ enum exType {
 
 string toString(exType type) {
   switch (type) {
+    case VariableDeclarationError:
+      return "VariableDeclarationError";
+    case FunctionDeclarationError:
+      return "FunctionDeclarationError";
     case AssignmentError:
       return "AssignmentError";
     case OperatorPriorityError:
@@ -114,12 +120,14 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
   int end = input.size();
   // последний символ - EOfF, поэтому читаем до предпоследнего
   for (int i = 0; i < end - 1; ++i) {
+    lineIndex = getLineIndex(input, i);
     Token token = input[i];
+    Token prevToken = prev(input, i), nextToken = next(input, i);
+
     if (token.isEndOfLine()) {
       if (isString or isChar) {
         return Exception(QuotesSequenceError, lineIndex);
       }
-      ++lineIndex;
       continue;
     }
     // обработка строк
@@ -159,23 +167,22 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
     // MemberError для Int после Name
     // а также UnexpectedDotError - один из операндов точки ключевое слово или оператор и тд
     if (token.source == ".") {
-      if (input[i - 1].source == "." or input[i + 1].source == ".") continue;
-
-      if (input[i - 1].type != IntNumber and input[i + 1].type == IntNumber) {
+      if (prevToken.source == "." or nextToken.source == ".") continue;
+      if (prevToken.type != IntNumber and nextToken.type == IntNumber) {
         return Exception(MemberError, lineIndex);
       }
       if (token.source == "." and i == 0) {
         return Exception(UnexpectedDotError, lineIndex);
       }
-      if (input[i - 1].type == Keyword or input[i - 1].isOperator() or input[i - 1].type == Constant or
-          input[i + 1].type == Keyword or input[i + 1].isOperator() or input[i + 1].type == Constant) {
-        if (input[i - 1].source != "this")
+      if (prevToken.type == Keyword or prevToken.isOperator() or prevToken.type == Constant or
+          nextToken.type == Keyword or nextToken.isOperator() or nextToken.type == Constant) {
+        if (prevToken.source != "this")
           return Exception(UnexpectedDotError, lineIndex);
       }
-      if (not input[i - 1].isRightBracket() and input[i - 1].type == Punctuation) {
+      if (not prevToken.isRightBracket() and prevToken.type == Punctuation) {
         return Exception(UnexpectedDotError, lineIndex);
       }
-      if (not input[i + 1].isLeftBracket() and input[i + 1].type == Punctuation) {
+      if (not nextToken.isLeftBracket() and nextToken.type == Punctuation) {
         return Exception(UnexpectedDotError, lineIndex);
       }
     }
@@ -190,73 +197,58 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
     if (token.source == ",") {
       if (i == 0) return Exception(UnexpectedTokenError, lineIndex);
 
-      if (not input[i - 1].isRightBracket() and input[i - 1].type == Punctuation) {
+      if (not prevToken.isRightBracket() and prevToken.type == Punctuation) {
         return Exception(UnexpectedTokenError, lineIndex);
       }
-      if (not input[i + 1].isLeftBracket() and input[i + 1].type == Punctuation) {
-        return Exception(UnexpectedTokenError, lineIndex);
-      }
-
-      if (not contain({"+", "-"}, input[i - 1].source) and input[i - 1].isOperator()) {
-        return Exception(UnexpectedTokenError, lineIndex);
-      }
-      if (not contain({"+", "-", "!"}, input[i + 1].source) and input[i + 1].isOperator()) {
+      if (not nextToken.isLeftBracket() and nextToken.type == Punctuation) {
         return Exception(UnexpectedTokenError, lineIndex);
       }
 
-      if (input[i - 1].source != "this" and input[i - 1].type == Keyword) {
+      if (not contain({"+", "-"}, prevToken.source) and prevToken.isOperator()) {
         return Exception(UnexpectedTokenError, lineIndex);
       }
-      if (not contain({"this", "not", "lambda", "new"}, input[i + 1].source) and input[i + 1].type == Keyword) {
+      if (not contain({"+", "-", "!"}, nextToken.source) and nextToken.isOperator()) {
+        return Exception(UnexpectedTokenError, lineIndex);
+      }
+
+      if (not contain({"this"}, prevToken.source) and prevToken.type == Keyword) {
+        return Exception(UnexpectedTokenError, lineIndex);
+      }
+      if (not contain({"this", "not", "lambda", "new", "ref", "out"}, nextToken.source) and
+          nextToken.type == Keyword) {
         return Exception(UnexpectedTokenError, lineIndex);
       }
     }
 
-    // AssignmentError
-    if (contain({"var", "val"}, token.source)) {
-      if (i != 0) {
-        if (not input[i - 1].isEndOfExpression())
-          return Exception(AssignmentError, lineIndex);
-      }
-      if (input[i + 1].type != Name or input[i + 2].source != "=")
-        return Exception(AssignmentError, lineIndex);
-    }
     // SyntaxError
     if (token.type == Name) {
-      if (i != 0)
+      if (i != 0) {
         if (contain({Name, IntNumber, CharLiteral, StringLiteral, Constant}, input[i - 1].type))
           return Exception(SyntaxError, lineIndex);
-      if (contain({Name, IntNumber, CharLiteral, StringLiteral, Constant}, input[i + 1].type))
+      }
+      if (contain({Name, IntNumber, CharLiteral, StringLiteral, Constant}, input[i + 1].type)) {
         return Exception(SyntaxError, lineIndex);
+      }
     }
+
     if (token.type == IntNumber) {
-      if (i != 0)
-        if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i - 1].type))
+      if (i != 0) {
+        if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, prevToken.type))
           return Exception(SyntaxError, lineIndex);
-      if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i + 1].type))
+      }
+      if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, nextToken.type)) {
         return Exception(SyntaxError, lineIndex);
+      }
     }
+
     if (token.source == ":") {
       if (i == 0) return Exception(SyntaxError, lineIndex);
-      if ((input[i - 1].type != Name and input[i - 1].source != ")") or input[i + 1].type != Name)
+      if ((prevToken.type != Name or nextToken.type != Name) and prevToken.source != ")") {
         return Exception(SyntaxError, lineIndex);
+      }
     }
-    // TODO: доделать
-//    if (token.type == Operation and token.source != "!" and token.source != "~") {
-//      if (input[i + 1].type == EOL) {
-//        if (i < 2) return Exception(SyntaxError, lineIndex);
-//        if ((token.source == "+" or token.source == "-") and input[i - 1].type == Operation)
-//          if (input[i - 2].type == Name and token.source == input[i - 1].source)
-//            continue;
-//        return Exception(SyntaxError, lineIndex);
-//      }
-//    }
-
-    if (contain({"if", "for", "while"}, token.source) and input[i + 1].source != "(")
-      return Exception(SyntaxError, lineIndex);
-    if (contain({"fun", "lambda"}, token.source) and input[i + 2].source != "(")
-      return Exception(SyntaxError, lineIndex);
   }
+  if (not bracketStack.empty()) return Exception(BracketSequenceError, lineIndex);
   return Exception(Nothing);
 }
 
@@ -264,59 +256,56 @@ Exception semanticErrorAnalysis(vector<Token> input) {
   int lineIndex = 1;
   int end = input.size();
   for (int i = 0; i < end - 1; ++i) {
+    lineIndex = getLineIndex(input, i);
     Token token = input[i];
+    Token prevToken = prev(input, i), nextToken = next(input, i);
+
     if (token.isEndOfLine()) {
-      ++lineIndex;
       continue;
     }
     // OperatorSequenceError
     if (token.type == AssignmentOperator) {
       if (i == 0) return Exception(OperatorSequenceError, lineIndex);
-      if (input[i - 1].isEndOfExpression() or input[i + 1].isEndOfExpression()) {
-        return Exception(OperatorSequenceError, lineIndex);
-      }
-      if (input[i - 1].type == AssignmentOperator or input[i + 1].type == AssignmentOperator) {
+      if (prevToken.type == AssignmentOperator or nextToken.type == AssignmentOperator) {
         return Exception(OperatorSequenceError, lineIndex);
       }
     }
     // OperatorPriorityError
     if (token.type == AssignmentOperator) {
-      if (contain({ArithmeticOperator, AssignmentOperator, LogicalOperator, ComparisonOperator}, input[i - 1].type))
+      if (contain({ArithmeticOperator, AssignmentOperator, LogicalOperator, ComparisonOperator}, prevToken.type))
         return Exception(OperatorPriorityError, lineIndex);
-      if (input[i + 1].isOperator() and not input[i + 1].isUnaryOperator())
+      if (prevToken.isBinaryOperator())
+        return Exception(OperatorPriorityError, lineIndex);
+      if (nextToken.isOperator() and not nextToken.isUnaryOperator())
         return Exception(OperatorPriorityError, lineIndex);
     }
     //  SyntaxError
     if (token.isBinaryOperator()) {
       if (i == 0) return Exception(SyntaxError, lineIndex);
-      if (input[i - 1].isEndOfExpression() or input[i + 1].isEndOfExpression() or
-          input[i - 1].isBinaryOperator() or input[i + 1].isBinaryOperator() or
-          input[i - 1].isLeftBracket() or input[i + 1].isRightBracket() or input[i - 1].isUnaryOperator()) {
+      if (nextToken.type == EOfF or prevToken.isBinaryOperator()
+          or nextToken.isBinaryOperator() or prevToken.isLeftBracket()
+          or nextToken.isRightBracket() or prevToken.isUnaryOperator()) {
         return Exception(SyntaxError, lineIndex);
       }
     }
     if (token.isUnaryOperator()) {
-      if (input[i + 1].isEndOfExpression() or input[i + 1].isRightBracket() or
-          (input[i + 1].type == Punctuation and not input[i + 1].isBracket()))
+      if (nextToken.isEndOfExpression() or nextToken.isRightBracket() or
+          (nextToken.type == Punctuation and not nextToken.isBracket()))
         return Exception(SyntaxError, lineIndex);
     }
     // SyntaxError для Range
     if (token.type == Range) {
       if (i == 0) return Exception(SyntaxError, lineIndex);
-      if (not input[i - 1].isRightBracket() and not input[i - 1].isObject())
+      if (not prevToken.isRightBracket() and not prevToken.isObject())
         return Exception(SyntaxError, lineIndex);
-      if (not input[i + 1].isLeftBracket() and not input[i + 1].isObject())
+      if (not nextToken.isLeftBracket() and not nextToken.isObject())
         return Exception(SyntaxError, lineIndex);
-    }
-    if (token.source == "for") {
-      if (input[i + 2].type != Name) return Exception(SyntaxError, lineIndex);
-      if (input[i + 3].source != "in") return Exception(SyntaxError, lineIndex);
     }
     if (token.source == "in") {
       if (i == 0) return Exception(SyntaxError, lineIndex);
-      if (not input[i - 1].isObject() and not input[i - 1].isRightBracket())
+      if (not prevToken.isObject() and not prevToken.isRightBracket())
         return Exception(SyntaxError, lineIndex);
-      if (not input[i + 1].isObject() and not input[i - 1].isLeftBracket())
+      if (not nextToken.isObject() and not prevToken.isLeftBracket())
         return Exception(SyntaxError, lineIndex);
     }
   }

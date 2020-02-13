@@ -154,7 +154,7 @@ vector<Token> tokenize(vector<string> input) {
   vector<Token> ret;
   for (string i: input)
     ret.push_back(getToken(i));
-  // добавление конца строки, Token(EOL, "\n")
+  // добавление конца строки, Token(EOL, "\m")
   ret.push_back(endOfLine);
   return ret;
 }
@@ -177,6 +177,35 @@ string format(vector<Token> input, bool source = false) {
     else v.push_back(source ? i.source : toString(i.type));
   }
   return "[" + join(v, ", ") + "]";
+}
+
+int getLineIndex(vector<Token> input, int index) {
+  int ret = 1;
+  for (int i = 0; i < index; ++i) {
+    if (input[i].type == EOL) ++ret;
+  }
+  return ret;
+}
+
+int prevIndex(vector<Token> input, int index) {
+  if (index <= 0) return 0;
+  --index;
+  while (input[index].type == EOL and index > 0) --index;
+  return index;
+}
+
+Token prev(vector<Token> input, int index) {
+  return input[prevIndex(input, index)];
+}
+
+int nextIndex(vector<Token> input, int index) {
+  ++index;
+  while (input[index].type == EOL and index < input.size() - 1) ++index;
+  return (index < input.size() - 1 ? index : input.size() - 1);
+}
+
+Token next(vector<Token> input, int index) {
+  return input[nextIndex(input, index)];
 }
 
 #endif //NEKO_INTERPRETER_TOKEN_H
