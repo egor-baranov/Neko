@@ -26,7 +26,6 @@ enum tokenType {
   AssignmentOperator,
   ComparisonOperator,
   BitOperator,
-  PostfixOperation, // ++ или --
   None
 };
 
@@ -72,8 +71,6 @@ string toString(tokenType t) {
       return "ComparisonOperator";
     case BitOperator:
       return "BitOperator";
-    case PostfixOperation:
-      return "PostfixOperation";
     case None:
       return "None";
   }
@@ -115,7 +112,7 @@ struct Token {
   }
 
   bool isBinaryOperator() {
-    return isOperator() and not isUnaryOperator() and type != PostfixOperation;
+    return isOperator() and not isUnaryOperator();
   }
 
   bool isObject() {

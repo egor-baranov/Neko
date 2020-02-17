@@ -1,24 +1,32 @@
 #ifndef NEKO_INTERPRETER_FUNCTIONOBJECT_H
 #define NEKO_INTERPRETER_FUNCTIONOBJECT_H
 
-#include "token.h"
-#include "exceptions.h"
-#include "Variable.h"
+#include "VariableObject.h"
 #include "expressions.h"
 
 struct FunctionArgument {
-	bool ref = false;
-	string name = "";
-	string typeName = "Any";
+  bool ref = false;
+  string name = "";
+  string typeName = "Any";
 };
 
 struct FunctionObject {
-	bool lambda = false;
-	string name = "";
-	string typeName = "Any";
+  bool isLambda = false;
+  string name = "";
+  string typeName = "Any";
+  int startIndex = -1;
+  vector<Expression> representation;
+  vector<FunctionArgument> args;
 
-	vector<Expression> representation;
-	vector<FunctionArgument> args;
+  Exception runWithArgs(vector<VariableObject> variables) {
+	  if (variables.size() < args.size()) {
+		  return Exception(FunctionArgumentLack, startIndex);
+	  }
+	  if (variables.size() > args.size()) {
+		  return Exception(FunctionArgumentExcess, startIndex);
+	  }
+
+  }
 };
 
 bool operator>(FunctionObject a, FunctionObject b) {
@@ -33,7 +41,7 @@ bool operator==(FunctionObject a, FunctionObject b) {
 	return a.name == b.name;
 }
 
-set<FunctionObject> FunctionSet;
+map<string, FunctionObject> Functions;
 
 Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	if (input.size() < 6) {
@@ -44,7 +52,7 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 		return Exception(FunctionDeclarationError, getLineIndex(input, index));
 	}
 	// есть ли имя у функции
-	functionObject.lambda = input[index].source == "lambda";
+	functionObject.isLambda = input[index].source == "lambda";
 	if (input[index].source == "fun") {
 		index = nextIndex(input, index);
 		if (input[index].type != Name) {
@@ -97,12 +105,22 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	}
 	if (input[index].source == "=") {
 		index = nextIndex(input, index);
-
+		ParseExpressionReturned result = parseExpression(input, index);
+		if (result.exception.type != Nothing) {
+			return result.exception;
+		}
+		functionObject.representation.push_back(result.source);
 	} else {
 		index = nextIndex(input, index);
-
+		while (input[index].source != "}") {
+			ParseExpressionReturned result = parseExpression(input, index);
+			if (result.exception.type != Nothing) {
+				return result.exception;
+			}
+			functionObject.representation.push_back(result.source);
+		}
 	}
-	FunctionSet.insert(functionObject);
+	Functions[functionObject.name] = functionObject;
 	return Exception(Nothing);
 }
 

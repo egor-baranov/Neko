@@ -79,20 +79,6 @@ vector<Token> parse(vector<Token> input) {
 			continue;
 		}
 		if (i > 0) {
-			if ((input[i - 1].type != Punctuation or input[i - 1].isRightBracket()) and token.source == "+" and
-			    input[i + 1].source == "+" and
-			    input[i + 2].type != Name and not input[i + 2].isLeftBracket()) {
-				output.push_back(Token(PostfixOperation, "++"));
-				++i;
-				continue;
-			}
-			if ((input[i - 1].type != Punctuation or input[i - 1].isRightBracket()) and token.source == "-" and
-			    input[i + 1].source == "-" and
-			    input[i + 2].type != Name and not input[i + 2].isLeftBracket()) {
-				output.push_back(Token(PostfixOperation, "--"));
-				++i;
-				continue;
-			}
 			if ((input[i - 1].type != Punctuation or input[i - 1].isRightBracket()) and token.source == "*" and
 			    input[i + 1].source == "*") {
 				output.push_back(Token(ArithmeticOperator, "**"));
@@ -184,10 +170,9 @@ void open(string url) {
 	}
 	cout << format(res, true) << endl;
 	cout << format(res, false) << endl;
-	int index = 0;
-	Exception functionDeclarationException = parseFunctionDeclaration(res, index);
-	if (functionDeclarationException.type != Nothing) {
-		throwException(functionDeclarationException);
+	Exception executionException = execute(res);
+	if (executionException.type != Nothing) {
+		throwException(executionException);
 		return;
 	}
 }

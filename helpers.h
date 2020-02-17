@@ -247,4 +247,10 @@ bool max(T a, T b, T c) {
 	return max(a, max(b, c));
 }
 
+struct Interval {
+  int left, right;
+
+  Interval(int l, int r) : left(l), right(r) {}
+};
+
 #endif //NEKO_INTERPRETER_HELPERS_H
