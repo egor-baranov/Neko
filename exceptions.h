@@ -7,6 +7,7 @@
 using namespace std;
 
 enum exType {
+  UnknownTypeError, // объявлена переменная неизвестного типа
   UndefinedNameUsage,
   VariableDeclarationError,
   FunctionDeclarationError,
@@ -38,6 +39,8 @@ enum exType {
 
 string toString(exType type) {
 	switch (type) {
+		case UnknownTypeError:
+			return "UnknownTypeError";
 		case UndefinedNameUsage:
 			return "UndefinedNameUsage";
 		case VariableDeclarationError:

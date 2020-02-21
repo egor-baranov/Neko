@@ -86,15 +86,19 @@ vector<Token> parse(vector<Token> input) {
 				continue;
 			}
 		}
+		if (not output.empty())
+			if (contain({"+", "-"}, output.back().source) and contain({"+", "-"}, token.source)) {
+				if (token.source == output.back().source) {
+					output.back().source = "-";
+				} else {
+					output.back().source = "+";
+				}
+				continue;
+			}
 		output.push_back(token);
 	}
 	output.push_back(input[end - 1]);
 	return output;
-}
-
-// выполнение программы
-void run(vector<Token> input) {
-	// cout << format(input) << endl;
 }
 
 // лексический анализ

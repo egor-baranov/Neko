@@ -21,13 +21,12 @@ nameType nameDeclaration(string name) {
 		return DeclaredFunction;
 	}
 	if (Classes.find(name) != Classes.end()) {
-
+		return DeclaredClass;
 	}
 	return Undeclared;
 }
 
 Exception execute(Expression expression) {
-
 	return Exception(Nothing);
 }
 
@@ -42,7 +41,7 @@ Exception execute(vector<Token> input) {
 			continue;
 		}
 		if (contain({"val", "var"}, token.source) or
-		    (token.type == Name and nameDeclaration(token.source) == Undeclared)) {
+		    (token.type == Name and nameDeclaration(token.source) == Undeclared and nextToken.source == "=")) {
 			Exception exception = parseVariableDeclaration(input, index);
 			if (exception.type == Nothing) continue;
 			return exception;
@@ -57,12 +56,18 @@ Exception execute(vector<Token> input) {
 			if (exception.type == Nothing) continue;
 			return exception;
 		}
+		if (contain({"print", "println"}, token.source) or nameDeclaration(token.source) == DeclaredFunction) {
+			Exception exception = parseFunctionCall(input, index);
+			if (exception.type == Nothing) continue;
+			return exception;
+		}
 		auto returnedExpression = parseExpression(input, index);
 		if (returnedExpression.exception.type != Nothing) {
 			return returnedExpression.exception;
 		}
 		execute(returnedExpression.source);
 	}
+	return Exception(Nothing);
 }
 
 #endif //NEKO_INTERPRETER_EXECUTION_H

@@ -5,6 +5,7 @@
 using namespace std;
 
 int main() {
+	cout.precision(100);
 //  string s;
 //  while (getline(cin, s)) {
 //    vector<Token> t = tokenize(separate(s, unite(Punctuations, Operators)));
@@ -13,6 +14,6 @@ int main() {
 //    cout << "[" + join(v, ", ") + "]" << endl;
 //  }
 //  // tokenizeFile("input.neko", "uncommented.txt");
-  open("input.neko");
-  return 0;
+	open("input.neko");
+	return 0;
 }

@@ -18,10 +18,11 @@ struct FunctionObject {
   vector<Expression> representation;
   vector<FunctionArgument> args;
 
-  Exception runWithArgs(vector<VariableObject> variables) {
+  Exception runWithArgs(vector<FunctionArgument> variables) {
 	  if (variables.size() < args.size()) {
 		  return Exception(FunctionArgumentLack, startIndex);
 	  }
+
 	  if (variables.size() > args.size()) {
 		  return Exception(FunctionArgumentExcess, startIndex);
 	  }
@@ -44,6 +45,7 @@ bool operator==(FunctionObject a, FunctionObject b) {
 map<string, FunctionObject> Functions;
 
 Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
+	Namespace nameSpace = InsideOfFunction;
 	if (input.size() < 6) {
 		return Exception(FunctionDeclarationError, getLineIndex(input, index));
 	}
@@ -81,6 +83,9 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 			index = nextIndex(input, index);
 			if (input[index].type != Name) {
 				return Exception(FunctionDeclarationError, getLineIndex(input, index));
+			}
+			if (not isBuildInType(input[index]) and not isDeclaredClass(input[index])) {
+				return Exception(UnknownTypeError, getLineIndex(input, index));
 			}
 			functionArgument.typeName = input[index].source;
 			index = nextIndex(input, index);
@@ -124,5 +129,27 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	return Exception(Nothing);
 }
 
+Exception parseFunctionCall(const vector<Token> &input, int &index) {
+	string functionName = input[index].source;
+	if (contain({"print", "println"}, functionName)) {
+		index = nextIndex(input, index);
+		if (input[index].source != "(") {
+			return Exception(FunctionCallError, getLineIndex(input, index));
+		}
+		index = nextIndex(input, index);
+		if (not input[index].isObject()) {
+			return Exception(FunctionCallError, getLineIndex(input, index));
+		}
+		if (Variables.find(input[index].source) != Variables.end()) {
+			cout << Variables[input[index].source].item.toString();
+		} else  printf("%s", Item(input[index]).toString().c_str());
+		if (functionName == "println") printf("%c", '\n');
+		index = nextIndex(input, index);
+		if (input[index].source != ")") {
+			return Exception(FunctionCallError, getLineIndex(input, index));
+		}
+	}
+	return Exception(Nothing);
+}
 
 #endif //NEKO_INTERPRETER_FUNCTIONOBJECT_H

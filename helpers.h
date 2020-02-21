@@ -212,21 +212,6 @@ bool containAll(vector<T> v, vector<T> vE) {
 	return ret;
 }
 
-int getPriority(string input) {
-	if (contain({"++", "--"}, input)) return 1;
-	if (contain({"**"}, input)) return 2;
-	if (contain({"!", "~"}, input)) return 3;
-	if (contain({"*", "/", "%"}, input)) return 4;
-	if (contain({"+", "-"}, input)) return 5;
-	if (contain({"<<", ">>"}, input)) return 6;
-	if (contain({">", ">=", "<", "<="}, input)) return 7;
-	if (contain({"==", "!="}, input)) return 8;
-	if (contain({"&"}, input)) return 9;
-	if (contain({"^"}, input)) return 10;
-	if (contain({"|"}, input)) return 11;
-	return 12;
-}
-
 template<typename T>
 bool min(T a, T b) {
 	return (a < b ? a : b);
@@ -245,6 +230,14 @@ bool max(T a, T b) {
 template<typename T>
 bool max(T a, T b, T c) {
 	return max(a, max(b, c));
+}
+
+string sliceString(string s, int left, int right) {
+	string ret;
+	for (int i = left; i <= right; ++i) {
+		ret += s[i];
+	}
+	return ret;
 }
 
 struct Interval {

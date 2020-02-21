@@ -5,6 +5,12 @@
 
 using namespace std;
 
+enum Namespace {
+  Global,
+  InsideOfFunction,
+  Local
+};
+
 set<string> BuiltInTypes{
 	"int8", "int16", "int32", "int64",
 	"uint8", "uint16", "uint32", "uint64",
