@@ -135,24 +135,34 @@ const Token emptyToken(None, "");
 
 Token getToken(string input) {
 	input = strip(input);
+	if (input.empty()) {
+		return Token(None, "");
+	}
 	if (input == ";") return endOfExpression;
 	if (input == "and") return Token(Operation, "&&");
 	if (input == "or") return Token(Operation, "||");
 	if (input == "not") return Token(Operation, "!");
-	if (Punctuations.find(input) != Punctuations.end())
+	if (Punctuations.find(input) != Punctuations.end()) {
 		return Token(Punctuation, input);
-	if (ObjectConstants.find(input) != ObjectConstants.end() or Constants.find(input) != Constants.end())
+	}
+	if (ObjectConstants.find(input) != ObjectConstants.end() or Constants.find(input) != Constants.end()) {
 		return Token(Constant, input);
-	if (Keywords.find(input) != Keywords.end())
+	}
+	if (Keywords.find(input) != Keywords.end()) {
 		return Token(Keyword, input);
-	if (Operators.find(input) != Operators.end())
+	}
+	if (Operators.find(input) != Operators.end()) {
 		return Token(Operation, input);
-	if (isNumber(input))
+	}
+	if (isNumber(input)) {
 		return Token(IntNumber, input);
-	if (input[0] == '\"' and input[input.size() - 1] == '\"')
+	}
+	if (input[0] == '\"' and input[input.size() - 1] == '\"') {
 		return Token(StringLiteral, input);
-	if (input[0] == '\'' and input[input.size() - 1] == '\'')
+	}
+	if (input[0] == '\'' and input[input.size() - 1] == '\'') {
 		return Token(CharLiteral, input);
+	}
 	return Token(Name, input);
 }
 
@@ -218,18 +228,18 @@ Token next(vector<Token> input, int index) {
 int getPriority(Token token) {
 	string input = token.source;
 	if (not token.isOperator()) throw "Type Error in getPriority";
-	if (contain({"++", "--"}, input)) return 1;
-	if (contain({"**"}, input)) return 2;
-	if (contain({"!", "~"}, input)) return 3;
-	if (contain({"*", "/", "%"}, input)) return 4;
-	if (contain({"+", "-"}, input)) return 5;
-	if (contain({"<<", ">>"}, input)) return 6;
-	if (contain({">", ">=", "<", "<="}, input)) return 7;
-	if (contain({"==", "!="}, input)) return 8;
-	if (contain({"&"}, input)) return 9;
-	if (contain({"^"}, input)) return 10;
-	if (contain({"|"}, input)) return 11;
-	return 12;
+	if (contain({"++", "--"}, input)) return 12;
+	if (contain({"**"}, input)) return 11;
+	if (contain({"!", "~"}, input)) return 10;
+	if (contain({"*", "/", "%"}, input)) return 9;
+	if (contain({"+", "-"}, input)) return 8;
+	if (contain({"<<", ">>"}, input)) return 7;
+	if (contain({">", ">=", "<", "<="}, input)) return 6;
+	if (contain({"==", "!="}, input)) return 5;
+	if (contain({"&"}, input)) return 4;
+	if (contain({"^"}, input)) return 3;
+	if (contain({"|"}, input)) return 2;
+	return 1;
 }
 
 #endif //NEKO_INTERPRETER_TOKEN_H

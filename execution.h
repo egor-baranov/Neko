@@ -36,6 +36,11 @@ Exception execute(vector<Token> input) {
 			if (exception.type == Nothing) continue;
 			return exception;
 		}
+		if (nameDeclaration(token.source) == DeclaredVariable and nextToken.source == "=") {
+			Exception exception = parseVariableAssignment(input, index);
+			if (exception.type == Nothing) continue;
+			return exception;
+		}
 		if (nameDeclaration(token.source) == DeclaredFunction) {
 			Exception exception = parseFunctionCall(input, index).exception;
 			if (exception.type == Nothing) continue;

@@ -7,10 +7,13 @@
 using namespace std;
 
 enum ExType {
+  ConstAssignment, // присвоение значения константе
+  OperandTypeError, // нет перегруженного оператора для выполнения операции, например 2 + "s"
   TypeError, // несовместимость типов
   UnknownTypeError, // объявлена переменная неизвестного типа
   UndefinedNameUsage,
   VariableDeclarationError,
+  VariableAssignmentError,
   FunctionDeclarationError,
   AssignmentError, // попытка присвоить значение к константе, а также некорректная инициализация
   OperatorPriorityError, // a *+^ b
@@ -39,10 +42,13 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
+	{ConstAssignment,             "ConstAssignment"},
+	{OperandTypeError,            "OperandTypeError"},
 	{TypeError,                   "TypeError"},
 	{UnknownTypeError,            "UnknownTypeError"},
 	{UndefinedNameUsage,          "UndefinedNameUsage"},
 	{VariableDeclarationError,    "VariableDeclarationError"},
+	{VariableAssignmentError,     "VariableAssignmentError"},
 	{FunctionDeclarationError,    "FunctionDeclarationError"},
 	{AssignmentError,             "AssignmentError"},
 	{OperatorPriorityError,       "OperatorPriorityError"},

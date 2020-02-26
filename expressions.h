@@ -2,19 +2,8 @@
 #define NEKO_INTERPRETER_EXPRESSIONS_H
 
 #include "token.h"
-#include "exceptions.h"
 #include <variant>
-
-enum Type {
-  IntType,
-  FloatType,
-  StringType,
-  CharType,
-  BoolType,
-  NoneType,
-  OperationType,
-  UndefinedType,
-};
+#include "OperationProcessing.hpp"
 
 Type getType(Token token) {
 	if (token.type == IntNumber) {
@@ -35,28 +24,32 @@ Type getType(Token token) {
 	if (token.source == "None") {
 		return NoneType;
 	}
+	if (token.isOperator()) {
+		return OperationType;
+	}
 	return NoneType;
 }
 
 void *getValue(const Type &type, const Token token) {
-	if (type == StringType) {
-		string ret = sliceString(token.source, 1, token.source.size() - 2);
-		return static_cast<void *> (new string(ret));
-	}
-	if (type == CharType) {
-		return static_cast<void *>(new char(token.source[1]));
-	}
-	if (type == IntType) {
-		return static_cast<void *>(new int(stoi(token.source)));
-	}
-	if (type == FloatType) {
-		return static_cast<void *>(new double(stod(token.source)));
-	}
-	if (type == BoolType) {
-		return static_cast<void *>(new bool(token.source == "True"));
-	}
-	if (type == NoneType) {
-		return static_cast<void *>(nullptr);
+	switch (type) {
+		case IntType:
+			return static_cast<void *>(new int(stoi(token.source)));
+		case FloatType:
+			return static_cast<void *>(new double(stod(token.source)));
+		case StringType: {
+			string ret = sliceString(token.source, 1, token.source.size() - 2);
+			return static_cast<void *> (new string(ret));
+		}
+		case CharType:
+			return static_cast<void *>(new char(token.source[1]));
+		case BoolType:
+			return static_cast<void *>(new bool(token.source == "True"));
+		case NoneType:
+			return static_cast<void *>(nullptr);
+		case OperationType:
+			break;
+		case UndefinedType:
+			break;
 	}
 }
 
@@ -65,6 +58,10 @@ struct Item {
   string source;
   void *value;
   Type type = NoneType;
+
+  ~Item() {
+	  // TODO: переопределить деструктор для value
+  }
 
   Item(Token init) {
 	  token = init;
@@ -86,6 +83,10 @@ struct Item {
 	  type = getType(init);
 	  value = getValue(type, init);
 	  source = init.source;
+  }
+
+  Item(void *v, Type t) : value(v), type(t) {
+	  source = toString();
   }
 
   string toString() {
@@ -116,7 +117,7 @@ struct Expression {
 };
 
 struct VariableObject {
-  bool isMutable = false;
+  bool isMutable = true;
   string name = "";
   string typeName = "Any";
   Item item = Item(emptyToken);
@@ -171,7 +172,7 @@ struct FunctionReturned {
 
 FunctionReturned parseFunctionCall(const vector<Token> &input, int &index);
 
-const FunctionReturned VoidResult = {Item(""), Nothing, true};
+const FunctionReturned VoidResult = {Item(getToken("")), Nothing, true};
 
 map<string, VariableObject> Variables;
 map<string, FunctionObject> Functions;
@@ -198,12 +199,13 @@ nameType nameDeclaration(string name) {
 }
 
 vector<Item> intoPostfixNotation(vector<Item> input) {
-	stack<Token> variables, operations;
+	stack<Token> operations;
 	vector<Item> output;
 	int end = input.size();
 	for (int i = 0; i < end; ++i) {
 		Token token = input[i].token;
-		if (token.isEndOfExpression()) {
+		if (token.source == "(") {
+			operations.push(token);
 			continue;
 		}
 		if (token.isOperator()) {
@@ -222,17 +224,49 @@ vector<Item> intoPostfixNotation(vector<Item> input) {
 			}
 		} else {
 			if (token.source == ")") {
-
+				while (operations.top().source != "(") {
+					output.push_back(operations.top());
+					operations.pop();
+				}
+				operations.pop();
 			} else {
-				output.push_back(Item(token));
+				output.push_back(token);
 			}
 		}
 	}
+	while (not operations.empty()) {
+		output.push_back(operations.top());
+		operations.pop();
+	}
+	return output;
 }
 
-// применение оператора к двум операндам
-void *Process(Item &a, Item &b, Token op) {
+struct ProcessReturned {
+  Item item;
+  Exception exception;
 
+  ProcessReturned(Item i, Exception e = Nothing) : item(i), exception(e) {}
+
+  ProcessReturned(Exception e) : item(""), exception(e) {}
+};
+
+// применение оператора к двум операндам
+ProcessReturned Process(const Item &a, const Item &b, Token op) {
+	if (a.type != b.type) {
+		return Exception(TypeError);
+	}
+	if (a.type == IntType) {
+		int x = *static_cast<int *>(a.value), y = *static_cast<int *>(b.value);
+		return Item(static_cast<void *>(new int(processOperation(x, y, op.source))), IntType);
+	}
+	if (a.type == FloatType) {
+		double x = *static_cast<double *>(a.value), y = *static_cast<double *>(b.value);
+		return Item(static_cast<void *>(new double(processOperation(x, y, op.source))), FloatType);
+	}
+	if (a.type == BoolType) {
+		bool x = *static_cast<bool *>(a.value), y = *static_cast<bool *>(b.value);
+		return Item(static_cast<void *>(new bool(processOperation(x, y, op.source))), BoolType);
+	}
 }
 
 struct CalculateReturned {
@@ -255,11 +289,26 @@ CalculateReturned Calculate(Expression expression) {
 		}
 		return ret;
 	}
+
+	vector<Item> postfixNotation = intoPostfixNotation(expression.content);
+	stack<Item> variables;
 	// вычисление выражений
-//	for (auto elem: intoPostfixNotation(expression.content)) {
-//
-//	}
-	return Item(emptyToken);
+	for (auto elem: postfixNotation) {
+		if (elem.type == OperationType) {
+			Item a = variables.top();
+			variables.pop();
+			Item b = variables.top();
+			variables.pop();
+			auto processed = Process(a, b, elem.token);
+			if (processed.exception.type != Nothing) {
+				return processed.exception;
+			}
+			variables.push(processed.item);
+		} else {
+			variables.push(elem);
+		}
+	}
+	return variables.top();
 }
 
 struct ParseExpressionReturned {
@@ -277,9 +326,29 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 	Token token = input[index];
 	int end = input.size() - 1;
 	Expression ret;
+	stack<Token> bracketStack;
 	while (index < end) {
 		token = input[index];
 		Token prevToken = prev(input, index), nextToken = next(input, index);
+		// условия выхода из expression-а
+		// TODO: FIX
+		if (token.type == EOE or (token.isRightBracket() and bracketStack.empty()) or token.source == ",") {
+			break;
+		}
+		if (index != 0 and prevToken.isObject() and token.isObject()) {
+			break;
+		}
+		if (token.isBracket()) {
+			if (bracketStack.empty()) {
+				bracketStack.push(token);
+			} else {
+				if (isBracketPair(bracketStack.top(), token)) {
+					bracketStack.pop();
+				} else {
+					bracketStack.pop();
+				}
+			}
+		}
 		if (token.type == Name) {
 			if (nameDeclaration(token.source) == Undeclared) {
 				return Exception(UndefinedNameUsage);
@@ -287,7 +356,7 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 			if (nameDeclaration(token.source) == DeclaredVariable and nextToken.source != ".") {
 				ret.content.push_back(Variables[token.source].item);
 				index = nextIndex(input, index);
-				break; // потом заменить на continue
+				continue;
 			}
 			if (nameDeclaration(token.source) == DeclaredFunction) {
 				FunctionReturned functionReturned = parseFunctionCall(input, index);
@@ -295,13 +364,11 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 					return functionReturned.exception;
 				}
 				ret.content.push_back(functionReturned.item);
-
-				break; // потом заменить на continue
+				continue;
 			}
 		}
 		ret.content.push_back(Item(token));
 		index = nextIndex(input, index);
-		break;
 	}
 	return ret;
 }
