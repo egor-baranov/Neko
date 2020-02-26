@@ -4,27 +4,7 @@
 #include "token.h"
 #include "FunctionObject.h"
 #include "VariableObject.h"
-#include "ClassObject.h"
-
-enum nameType {
-  DeclaredVariable,
-  DeclaredFunction,
-  DeclaredClass,
-  Undeclared
-};
-
-nameType nameDeclaration(string name) {
-	if (Variables.find(name) != Variables.end()) {
-		return DeclaredVariable;
-	}
-	if (Functions.find(name) != Functions.end()) {
-		return DeclaredFunction;
-	}
-	if (Classes.find(name) != Classes.end()) {
-		return DeclaredClass;
-	}
-	return Undeclared;
-}
+#include "ClassObject.hpp"
 
 Exception execute(Expression expression) {
 	return Exception(Nothing);
@@ -56,8 +36,8 @@ Exception execute(vector<Token> input) {
 			if (exception.type == Nothing) continue;
 			return exception;
 		}
-		if (contain({"print", "println"}, token.source) or nameDeclaration(token.source) == DeclaredFunction) {
-			Exception exception = parseFunctionCall(input, index);
+		if (nameDeclaration(token.source) == DeclaredFunction) {
+			Exception exception = parseFunctionCall(input, index).exception;
 			if (exception.type == Nothing) continue;
 			return exception;
 		}

@@ -6,7 +6,8 @@
 
 using namespace std;
 
-enum exType {
+enum ExType {
+  TypeError, // несовместимость типов
   UnknownTypeError, // объявлена переменная неизвестного типа
   UndefinedNameUsage,
   VariableDeclarationError,
@@ -37,77 +38,52 @@ enum exType {
   Nothing
 };
 
-string toString(exType type) {
-	switch (type) {
-		case UnknownTypeError:
-			return "UnknownTypeError";
-		case UndefinedNameUsage:
-			return "UndefinedNameUsage";
-		case VariableDeclarationError:
-			return "VariableDeclarationError";
-		case FunctionDeclarationError:
-			return "FunctionDeclarationError";
-		case AssignmentError:
-			return "AssignmentError";
-		case OperatorPriorityError:
-			return "OperatorPriorityError";
-		case OperatorSequenceError:
-			return "OperatorSequenceError";
-		case TooManyPointsInNumber:
-			return "TooManyPointsInNumber";
-		case MemberError:
-			return "MemberError";
-		case SyntaxError:
-			return "SyntaxError";
-		case UnexpectedDotError:
-			return "UnexpectedDotError";
-		case CharFormatError:
-			return "CharFormatError";
-		case UnterminatedComment:
-			return "UnterminatedComment";
-		case ZeroDivisionError:
-			return "ZeroDivisionError";
-		case NameError:
-			return "NameError";
-		case BracketSequenceError:
-			return "BracketSequenceError";
-		case QuotesSequenceError:
-			return "QuotesSequenceError";
-		case ElementSequenceError:
-			return "ElementSequenceError";
-		case FunctionCallError:
-			return "FunctionCallError";
-		case FunctionArgumentExcess:
-			return "FunctionArgumentExcess";
-		case FunctionArgumentLack:
-			return "FunctionArgumentLack";
-		case IncorrectOperationArguments:
-			return "IncorrectOperationArguments";
-		case UnexpectedTokenError:
-			return "UnexpectedTokenError";
-		case InputError:
-			return "InputError";
-		case MathError:
-			return "MathError";
-		case MemoryError:
-			return "MemoryError";
-		case RuntimeError:
-			return "RuntimeError";
-		case Nothing:
-			return "Nothing";
-	}
+map<ExType, string> ExTypeToString{
+	{TypeError,                   "TypeError"},
+	{UnknownTypeError,            "UnknownTypeError"},
+	{UndefinedNameUsage,          "UndefinedNameUsage"},
+	{VariableDeclarationError,    "VariableDeclarationError"},
+	{FunctionDeclarationError,    "FunctionDeclarationError"},
+	{AssignmentError,             "AssignmentError"},
+	{OperatorPriorityError,       "OperatorPriorityError"},
+	{OperatorSequenceError,       "OperatorSequenceError"},
+	{TooManyPointsInNumber,       "TooManyPointsInNumber"},
+	{MemberError,                 "MemberError"},
+	{SyntaxError,                 "SyntaxError"},
+	{UnexpectedDotError,          "UnexpectedDotError"},
+	{CharFormatError,             "CharFormatError"},
+	{UnterminatedComment,         "UnterminatedComment"},
+	{ZeroDivisionError,           "ZeroDivisionError"},
+	{NameError,                   "NameError"},
+	{BracketSequenceError,        "BracketSequenceError"},
+	{QuotesSequenceError,         "QuotesSequenceError"},
+	{ElementSequenceError,        "ElementSequenceError"},
+	{FunctionCallError,           "FunctionCallError"},
+	{FunctionArgumentExcess,      "FunctionArgumentExcess"},
+	{FunctionArgumentLack,        "FunctionArgumentLack"},
+	{IncorrectOperationArguments, "IncorrectOperationArguments"},
+	{UnexpectedTokenError,        "UnexpectedTokenError"},
+	{InputError,                  "InputError"},
+	{MathError,                   "MathError"},
+	{MemoryError,                 "MemoryError"},
+	{RuntimeError,                "RuntimeError"},
+	{Nothing,                     "Nothing"}
+};
+
+string toString(ExType exType) {
+	return ExTypeToString[exType];
 }
 
 struct Exception {
-  exType type;
+  ExType type;
   int line;
 
-  Exception(exType eT) {
+  Exception(ExType eT) {
 	  type = eT;
 	  line = -1;
   }
 
-  Exception(exType eT, int l) : type(eT), line(l) {}
+  Exception(ExType eT, int l) : type(eT), line(l) {}
 };
 
 string errorMessage(Exception ex) {
@@ -166,8 +142,9 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
 			return Exception(CharFormatError, lineIndex);
 		// обработка неправильных имен
 		if (token.type == Name and not isCorrectName(token.source)) {
-			if (token.source[0] == '\"' or token.source[0] == '\'')
+			if (token.source[0] == '\"' or token.source[0] == '\'') {
 				return Exception(QuotesSequenceError, lineIndex);
+			}
 			return Exception(NameError, lineIndex);
 		}
 		// MemberError для Int после Name
@@ -280,10 +257,12 @@ Exception semanticErrorAnalysis(vector<Token> input) {
 		if (token.type == AssignmentOperator) {
 			if (contain({ArithmeticOperator, AssignmentOperator, LogicalOperator, ComparisonOperator}, prevToken.type))
 				return Exception(OperatorPriorityError, lineIndex);
-			if (prevToken.isBinaryOperator())
+			if (prevToken.isBinaryOperator()) {
 				return Exception(OperatorPriorityError, lineIndex);
-			if (nextToken.isOperator() and not nextToken.isUnaryOperator())
+			}
+			if (nextToken.isOperator() and not nextToken.isUnaryOperator()) {
 				return Exception(OperatorPriorityError, lineIndex);
+			}
 		}
 		//  SyntaxError
 		if (token.isBinaryOperator()) {
@@ -296,23 +275,28 @@ Exception semanticErrorAnalysis(vector<Token> input) {
 		}
 		if (token.isUnaryOperator()) {
 			if (nextToken.isEndOfExpression() or nextToken.isRightBracket() or
-			    (nextToken.type == Punctuation and not nextToken.isBracket()))
+			    (nextToken.type == Punctuation and not nextToken.isBracket())) {
 				return Exception(SyntaxError, lineIndex);
+			}
 		}
 		// SyntaxError для Range
 		if (token.type == Range) {
 			if (i == 0) return Exception(SyntaxError, lineIndex);
-			if (not prevToken.isRightBracket() and not prevToken.isObject())
+			if (not prevToken.isRightBracket() and not prevToken.isObject()) {
 				return Exception(SyntaxError, lineIndex);
-			if (not nextToken.isLeftBracket() and not nextToken.isObject())
+			}
+			if (not nextToken.isLeftBracket() and not nextToken.isObject()) {
 				return Exception(SyntaxError, lineIndex);
+			}
 		}
 		if (token.source == "in") {
 			if (i == 0) return Exception(SyntaxError, lineIndex);
-			if (not prevToken.isObject() and not prevToken.isRightBracket())
+			if (not prevToken.isObject() and not prevToken.isRightBracket()) {
 				return Exception(SyntaxError, lineIndex);
-			if (not nextToken.isObject() and not prevToken.isLeftBracket())
+			}
+			if (not nextToken.isObject() and not prevToken.isLeftBracket()) {
 				return Exception(SyntaxError, lineIndex);
+			}
 		}
 	}
 	return Exception(Nothing);

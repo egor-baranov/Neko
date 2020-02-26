@@ -7,7 +7,7 @@
 
 using namespace std;
 
-enum tokenType {
+enum TokenType {
   EOfF, EOL, EOE, // EOE - конец выражения, чтобы несколько выражений писать через одну строчку
   Name, // пользовательские имена
   Keyword, // служебное ключевое слово: if, for, and, or
@@ -29,7 +29,7 @@ enum tokenType {
   None
 };
 
-string toString(tokenType t) {
+string toString(TokenType t) {
 	switch (t) {
 		case EOfF:
 			return "EOfF";
@@ -77,12 +77,12 @@ string toString(tokenType t) {
 }
 
 struct Token {
-  tokenType type;
+  TokenType type;
   string source;
 
   Token(Token const &other) : type(other.type), source(other.source) {};
 
-  Token(tokenType t, string s) : type(t), source(s) {};
+  Token(TokenType t, string s) : type(t), source(s) {};
 
   bool isLeftBracket() {
 	  return source == "(" or source == "[" or source == "{";
@@ -185,11 +185,12 @@ string format(vector<Token> input, bool source = false) {
 	return "[" + join(v, ", ") + "]";
 }
 
-int getLineIndex(vector<Token> input, int index) {
+int getLineIndex(const vector<Token> &input, int index) {
 	int ret = 1;
 	for (int i = 0; i < index; ++i) {
 		if (input[i].type == EOL) ++ret;
 	}
+	if (input[index].type == EOfF) --ret;
 	return ret;
 }
 

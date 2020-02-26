@@ -5,19 +5,6 @@
 #include "exceptions.h"
 #include "expressions.h"
 
-struct VariableObject {
-  bool isMutable = false;
-  string name = "";
-  string typeName = "Any";
-  Item item = Item(emptyToken);
-};
-
-struct ClassObject {
-  string name = "";
-  string parentName = "Object";
-};
-
-
 bool operator>(VariableObject a, VariableObject b) {
 	return a.name > b.name;
 }
@@ -30,14 +17,11 @@ bool operator==(VariableObject a, VariableObject b) {
 	return a.name == b.name;
 }
 
-map<string, VariableObject> Variables;
-map<string, ClassObject> Classes;
-
 bool isDeclaredClass(Token token) {
 	return Classes.find(token.source) != Classes.end();
 }
 
-Exception parseVariableDeclaration(const vector<Token> &input, int &index, Namespace nameSpace = Global) {
+Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 	if (input.size() < 3) {
 		return Exception(VariableDeclarationError, getLineIndex(input, index));
 	}
@@ -73,7 +57,11 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index, Names
 	if (result.exception.type != Nothing) {
 		return result.exception;
 	}
-	variable.item = Calculate(result.source);
+	CalculateReturned calculateReturned = Calculate(result.source);
+	if (calculateReturned.exception.type != Nothing) {
+		return Exception(calculateReturned.exception.type, getLineIndex(input, index));
+	}
+	variable.item = calculateReturned.item;
 	Variables[variable.name] = variable;
 	return Exception(Nothing);
 }

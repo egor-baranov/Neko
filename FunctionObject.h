@@ -3,32 +3,7 @@
 
 #include "VariableObject.h"
 #include "expressions.h"
-
-struct FunctionArgument {
-  bool ref = false;
-  string name = "";
-  string typeName = "Any";
-};
-
-struct FunctionObject {
-  bool isLambda = false;
-  string name = "";
-  string typeName = "Any";
-  int startIndex = -1;
-  vector<Expression> representation;
-  vector<FunctionArgument> args;
-
-  Exception runWithArgs(vector<FunctionArgument> variables) {
-	  if (variables.size() < args.size()) {
-		  return Exception(FunctionArgumentLack, startIndex);
-	  }
-
-	  if (variables.size() > args.size()) {
-		  return Exception(FunctionArgumentExcess, startIndex);
-	  }
-
-  }
-};
+#include "NekoLib.h"
 
 bool operator>(FunctionObject a, FunctionObject b) {
 	return a.name > b.name;
@@ -41,8 +16,6 @@ bool operator<(FunctionObject a, FunctionObject b) {
 bool operator==(FunctionObject a, FunctionObject b) {
 	return a.name == b.name;
 }
-
-map<string, FunctionObject> Functions;
 
 Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	Namespace nameSpace = InsideOfFunction;
@@ -129,27 +102,46 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	return Exception(Nothing);
 }
 
-Exception parseFunctionCall(const vector<Token> &input, int &index) {
-	string functionName = input[index].source;
-	if (contain({"print", "println"}, functionName)) {
-		index = nextIndex(input, index);
-		if (input[index].source != "(") {
-			return Exception(FunctionCallError, getLineIndex(input, index));
-		}
-		index = nextIndex(input, index);
-		if (not input[index].isObject()) {
-			return Exception(FunctionCallError, getLineIndex(input, index));
-		}
-		if (Variables.find(input[index].source) != Variables.end()) {
-			cout << Variables[input[index].source].item.toString();
-		} else  printf("%s", Item(input[index]).toString().c_str());
-		if (functionName == "println") printf("%c", '\n');
-		index = nextIndex(input, index);
-		if (input[index].source != ")") {
-			return Exception(FunctionCallError, getLineIndex(input, index));
-		}
+// TODO: добавить возвращаемое значение
+FunctionReturned call(string functionName, vector<Item> &args, int functionCallIndex) {
+	if (Functions.find(functionName) != Functions.end()) {
+		Functions[functionName].runWithArgs(args);
+	} else if (BuiltInFunctions.find(functionName) != BuiltInFunctions.end()) {
+		return callBuiltInFunction(functionName, args);
+	} else {
+		return Exception(UndefinedNameUsage, functionCallIndex);
 	}
 	return Exception(Nothing);
+}
+
+FunctionReturned parseFunctionCall(const vector<Token> &input, int &index) {
+	string functionName = input[index].source;
+	int functionCallIndex = getLineIndex(input, index);
+	index = nextIndex(input, index);
+	if (input[index].source != "(") {
+		return Exception(FunctionCallError, getLineIndex(input, index));
+	}
+	index = nextIndex(input, index);
+	vector<Item> args;
+	while (input[index].source != ")") {
+		auto result = parseExpression(input, index);
+		if (result.exception.type != Nothing) {
+			return Exception(result.exception.type, getLineIndex(input, index));
+		}
+		CalculateReturned calculateReturned = Calculate(result.source);
+		if (calculateReturned.exception.type != Nothing) {
+			return Exception(calculateReturned.exception.type, getLineIndex(input, index));
+		}
+		args.push_back(calculateReturned.item);
+		if (not contain({")", ","}, input[index].source)) {
+			return Exception(FunctionCallError, getLineIndex(input, index));
+		}
+		if (input[index].source == ",") {
+			index = nextIndex(input, index);
+		}
+	}
+	index = nextIndex(input, index);
+	return call(functionName, args, functionCallIndex);
 }
 
 #endif //NEKO_INTERPRETER_FUNCTIONOBJECT_H

@@ -1,5 +1,5 @@
-#ifndef NEKO_INTERPRETER_CLASSOBJECT_H
-#define NEKO_INTERPRETER_CLASSOBJECT_H
+#ifndef NEKO_INTERPRETER_CLASSOBJECT_HPP
+#define NEKO_INTERPRETER_CLASSOBJECT_HPP
 
 #include "token.h"
 #include "exceptions.h"
@@ -24,4 +24,4 @@ Exception parseClassDeclaration(const vector<Token> &input, int &index) {
 	return Exception(Nothing);
 }
 
-#endif //NEKO_INTERPRETER_CLASSOBJECT_H
+#endif //NEKO_INTERPRETER_CLASSOBJECT_HPP
