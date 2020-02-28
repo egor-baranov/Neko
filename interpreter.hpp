@@ -1,9 +1,9 @@
-#ifndef NEKO_INTERPRETER_INTERPRETER_H
-#define NEKO_INTERPRETER_INTERPRETER_H
+#ifndef NEKO_INTERPRETER_INTERPRETER_HPP
+#define NEKO_INTERPRETER_INTERPRETER_HPP
 
 #include <bits/stdc++.h>
-#include "exceptions.h"
-#include "execution.h"
+#include "exceptions.hpp"
+#include "execution.hpp"
 
 using namespace std;
 
@@ -81,6 +81,11 @@ vector<Token> parse(vector<Token> input) {
 		if (i > 0) {
 			if ((input[i - 1].type != Punctuation or input[i - 1].isRightBracket()) and token.source == "*" and
 			    input[i + 1].source == "*") {
+				if (input[i + 2].source == "=") {
+					output.push_back(Token(AssignmentOperator, "**="));
+					i += 2;
+					continue;
+				}
 				output.push_back(Token(ArithmeticOperator, "**"));
 				++i;
 				continue;
@@ -89,9 +94,9 @@ vector<Token> parse(vector<Token> input) {
 		if (not output.empty())
 			if (contain({"+", "-"}, output.back().source) and contain({"+", "-"}, token.source)) {
 				if (token.source == output.back().source) {
-					output.back().source = "-";
-				} else {
 					output.back().source = "+";
+				} else {
+					output.back().source = "-";
 				}
 				continue;
 			}
@@ -181,4 +186,4 @@ void open(string url) {
 	}
 }
 
-#endif //NEKO_INTERPRETER_INTERPRETER_H
+#endif //NEKO_INTERPRETER_INTERPRETER_HPP

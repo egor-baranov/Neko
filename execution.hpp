@@ -1,9 +1,9 @@
-#ifndef NEKO_INTERPRETER_EXECUTION_H
-#define NEKO_INTERPRETER_EXECUTION_H
+#ifndef NEKO_INTERPRETER_EXECUTION_HPP
+#define NEKO_INTERPRETER_EXECUTION_HPP
 
-#include "token.h"
-#include "FunctionObject.h"
-#include "VariableObject.h"
+#include "token.hpp"
+#include "FunctionObject.hpp"
+#include "VariableObject.hpp"
 #include "ClassObject.hpp"
 
 Exception execute(Expression expression) {
@@ -16,7 +16,7 @@ Exception execute(vector<Token> input) {
 	while (index < end) {
 		Token token = input[index];
 		Token prevToken = prev(input, index), nextToken = next(input, index);
-		if (token.type == EOL) {
+		if (token.type == EOE or token.type == EOL) {
 			++index;
 			continue;
 		}
@@ -36,8 +36,8 @@ Exception execute(vector<Token> input) {
 			if (exception.type == Nothing) continue;
 			return exception;
 		}
-		if (nameDeclaration(token.source) == DeclaredVariable and nextToken.source == "=") {
-			Exception exception = parseVariableAssignment(input, index);
+		if (nameDeclaration(token.source) == DeclaredVariable and nextToken.type == AssignmentOperator) {
+			Exception exception = parseVariableAssignment(input, index).exception;
 			if (exception.type == Nothing) continue;
 			return exception;
 		}
@@ -50,9 +50,9 @@ Exception execute(vector<Token> input) {
 		if (returnedExpression.exception.type != Nothing) {
 			return returnedExpression.exception;
 		}
-		execute(returnedExpression.source);
+		// execute(returnedExpression.source);
 	}
-	return Exception(Nothing);
+	return Nothing;
 }
 
-#endif //NEKO_INTERPRETER_EXECUTION_H
+#endif //NEKO_INTERPRETER_EXECUTION_HPP

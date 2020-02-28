@@ -1,5 +1,5 @@
-#ifndef NEKO_INTERPRETER_HELPERS_H
-#define NEKO_INTERPRETER_HELPERS_H
+#ifndef NEKO_INTERPRETER_HELPERS_HPP
+#define NEKO_INTERPRETER_HELPERS_HPP
 
 #include <bits/stdc++.h>
 
@@ -246,4 +246,4 @@ struct Interval {
   Interval(int l, int r) : left(l), right(r) {}
 };
 
-#endif //NEKO_INTERPRETER_HELPERS_H
+#endif //NEKO_INTERPRETER_HELPERS_HPP

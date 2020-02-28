@@ -1,7 +1,7 @@
-#ifndef NEKO_INTERPRETER_EXPRESSIONS_H
-#define NEKO_INTERPRETER_EXPRESSIONS_H
+#ifndef NEKO_INTERPRETER_EXPRESSIONS_HPP
+#define NEKO_INTERPRETER_EXPRESSIONS_HPP
 
-#include "token.h"
+#include "token.hpp"
 #include <variant>
 #include "OperationProcessing.hpp"
 
@@ -61,6 +61,10 @@ struct Item {
 
   ~Item() {
 	  // TODO: переопределить деструктор для value
+  }
+
+  bool isNumber() {
+	  return contain({FloatType, IntType}, type);
   }
 
   Item(Token init) {
@@ -198,6 +202,12 @@ nameType nameDeclaration(string name) {
 	return Undeclared;
 }
 
+bool isLeftAssociative(Item item) {
+	assert(item.type == OperationType);
+	return item.source != "**";
+}
+
+// TODO: FIX
 vector<Item> intoPostfixNotation(vector<Item> input) {
 	stack<Token> operations;
 	vector<Item> output;
@@ -209,19 +219,20 @@ vector<Item> intoPostfixNotation(vector<Item> input) {
 			continue;
 		}
 		if (token.isOperator()) {
-			stack<Token> opTmp;
 			while (not operations.empty()) {
-				if (operations.top().source == "(" or getPriority(operations.top()) < getPriority(token)) {
+				if (operations.top().source == "(") {
 					break;
 				}
-				opTmp.push(operations.top());
+				if (isLeftAssociative(token) and getPriority(operations.top()) < getPriority(token)) {
+					break;
+				}
+				if (not isLeftAssociative(token) and getPriority(operations.top()) <= getPriority(token)) {
+					break;
+				}
+				output.push_back(operations.top());
 				operations.pop();
 			}
 			operations.push(token);
-			while (not opTmp.empty()) {
-				operations.push(opTmp.top());
-				opTmp.pop();
-			}
 		} else {
 			if (token.source == ")") {
 				while (operations.top().source != "(") {
@@ -251,21 +262,47 @@ struct ProcessReturned {
 };
 
 // применение оператора к двум операндам
-ProcessReturned Process(const Item &a, const Item &b, Token op) {
+ProcessReturned Process(Item &a, Item &b, Token op) {
 	if (a.type != b.type) {
 		return Exception(TypeError);
 	}
-	if (a.type == IntType) {
+	if (not contain(possibleOperations(a.type), op.source)) {
+		return Exception(OperandTypeError);
+	}
+	if (a.type == IntType and b.type == IntType) {
 		int x = *static_cast<int *>(a.value), y = *static_cast<int *>(b.value);
+		if (op.source == "/" and x == 0) {
+			return Exception(ZeroDivisionError);
+		}
+		if (isComparisonOperation(op.source)) {
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+		}
 		return Item(static_cast<void *>(new int(processOperation(x, y, op.source))), IntType);
 	}
-	if (a.type == FloatType) {
-		double x = *static_cast<double *>(a.value), y = *static_cast<double *>(b.value);
+	if (a.type == FloatType or b.type == FloatType) {
+		double x = (a.type == IntType ? *static_cast<int *>(a.value) : *static_cast<double *>(a.value)),
+			y = (b.type == IntType ? *static_cast<int *>(b.value) : *static_cast<double *>(b.value));
+		if (op.source == "/" and x == 0) {
+			return Exception(ZeroDivisionError);
+		}
+		if (isComparisonOperation(op.source)) {
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+		}
 		return Item(static_cast<void *>(new double(processOperation(x, y, op.source))), FloatType);
 	}
 	if (a.type == BoolType) {
 		bool x = *static_cast<bool *>(a.value), y = *static_cast<bool *>(b.value);
+		if (isComparisonOperation(op.source)) {
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+		}
 		return Item(static_cast<void *>(new bool(processOperation(x, y, op.source))), BoolType);
+	}
+	if (a.type == StringType) {
+		string x = *static_cast<string *>(a.value), y = *static_cast<string *>(b.value);
+		if (isComparisonOperation(op.source)) {
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+		}
+		return Item(static_cast<void *>(new string(processOperation(x, y, op.source))), StringType);
 	}
 }
 
@@ -311,6 +348,19 @@ CalculateReturned Calculate(Expression expression) {
 	return variables.top();
 }
 
+struct VariableAssignmentReturned {
+  Item item;
+  Exception exception;
+
+  VariableAssignmentReturned(Item i, Exception e) : item(i), exception(e) {}
+
+  VariableAssignmentReturned(Item i) : item(i), exception(Nothing) {}
+
+  VariableAssignmentReturned(Exception e) : item(""), exception(e) {}
+};
+
+VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, int &index);
+
 struct ParseExpressionReturned {
   Expression source;
   Exception exception = Exception(Nothing);
@@ -331,12 +381,22 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 		token = input[index];
 		Token prevToken = prev(input, index), nextToken = next(input, index);
 		// условия выхода из expression-а
-		// TODO: FIX
 		if (token.type == EOE or (token.isRightBracket() and bracketStack.empty()) or token.source == ",") {
 			break;
 		}
-		if (index != 0 and prevToken.isObject() and token.isObject()) {
-			break;
+		if (index != 0) {
+			if (prevToken.isObject() and token.isObject()) {
+				break;
+			}
+			if (prevToken.isRightBracket() and token.isObject()) {
+				break;
+			}
+			if (prevToken.isObject() and token.isLeftBracket()) {
+				break;
+			}
+			if (prevToken.isRightBracket() and token.isLeftBracket()) {
+				break;
+			}
 		}
 		if (token.isBracket()) {
 			if (bracketStack.empty()) {
@@ -345,7 +405,7 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 				if (isBracketPair(bracketStack.top(), token)) {
 					bracketStack.pop();
 				} else {
-					bracketStack.pop();
+					bracketStack.push(token);
 				}
 			}
 		}
@@ -354,6 +414,14 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 				return Exception(UndefinedNameUsage);
 			}
 			if (nameDeclaration(token.source) == DeclaredVariable and nextToken.source != ".") {
+				if (nextToken.source == "=") {
+					auto result = parseVariableAssignment(input, index);
+					if (result.exception.type != Nothing) {
+						return Exception(result.exception.type, getLineIndex(input, index));
+					}
+					ret.content.push_back(result.item);
+					continue;
+				}
 				ret.content.push_back(Variables[token.source].item);
 				index = nextIndex(input, index);
 				continue;
@@ -373,4 +441,4 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 	return ret;
 }
 
-#endif //NEKO_INTERPRETER_EXPRESSIONS_H
+#endif //NEKO_INTERPRETER_EXPRESSIONS_HPP

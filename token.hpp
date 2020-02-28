@@ -1,9 +1,9 @@
-#ifndef NEKO_INTERPRETER_TOKEN_H
-#define NEKO_INTERPRETER_TOKEN_H
+#ifndef NEKO_INTERPRETER_TOKEN_HPP
+#define NEKO_INTERPRETER_TOKEN_HPP
 
 #include <bits/stdc++.h>
-#include "keywords.h"
-#include "helpers.h"
+#include "keywords.hpp"
+#include "helpers.hpp"
 
 using namespace std;
 
@@ -228,18 +228,40 @@ Token next(vector<Token> input, int index) {
 int getPriority(Token token) {
 	string input = token.source;
 	if (not token.isOperator()) throw "Type Error in getPriority";
-	if (contain({"++", "--"}, input)) return 12;
-	if (contain({"**"}, input)) return 11;
-	if (contain({"!", "~"}, input)) return 10;
-	if (contain({"*", "/", "%"}, input)) return 9;
-	if (contain({"+", "-"}, input)) return 8;
-	if (contain({"<<", ">>"}, input)) return 7;
-	if (contain({">", ">=", "<", "<="}, input)) return 6;
-	if (contain({"==", "!="}, input)) return 5;
-	if (contain({"&"}, input)) return 4;
-	if (contain({"^"}, input)) return 3;
-	if (contain({"|"}, input)) return 2;
+	if (contain({"||"}, token.source)) {
+		return 2;
+	}
+	if (contain({"&&"}, token.source)) {
+		return 3;
+	}
+	if (contain({"|"}, token.source)) {
+		return 4;
+	}
+	if (contain({"^"}, token.source)) {
+		return 5;
+	}
+	if (contain({"&"}, token.source)) {
+		return 6;
+	}
+	if (contain({"==", "!="}, token.source)) {
+		return 7;
+	}
+	if (contain({"<", "<=", ">", ">="}, token.source)) {
+		return 8;
+	}
+	if (contain({"<<", ">>"}, token.source)) {
+		return 9;
+	}
+	if (contain({"+", "-"}, token.source)) {
+		return 10;
+	}
+	if (contain({"*", "/", "%", "**"}, token.source)) {
+		return 11;
+	}
+	if (contain({"**"}, token.source)) {
+		return 12;
+	}
 	return 1;
 }
 
-#endif //NEKO_INTERPRETER_TOKEN_H
+#endif //NEKO_INTERPRETER_TOKEN_HPP

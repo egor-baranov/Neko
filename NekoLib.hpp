@@ -1,7 +1,7 @@
-#ifndef NEKO_INTERPRETER_NEKOLIB_H
-#define NEKO_INTERPRETER_NEKOLIB_H
+#ifndef NEKO_INTERPRETER_NEKOLIB_HPP
+#define NEKO_INTERPRETER_NEKOLIB_HPP
 
-#include "expressions.h"
+#include "expressions.hpp"
 
 FunctionReturned print(vector<Item> &input) {
 	int end = input.size() - 1;
@@ -124,4 +124,4 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 	}
 }
 
-#endif //NEKO_INTERPRETER_NEKOLIB_H
+#endif //NEKO_INTERPRETER_NEKOLIB_HPP

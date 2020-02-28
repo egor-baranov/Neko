@@ -1,5 +1,5 @@
-#ifndef NEKO_INTERPRETER_KEYWORDS_H
-#define NEKO_INTERPRETER_KEYWORDS_H
+#ifndef NEKO_INTERPRETER_KEYWORDS_HPP
+#define NEKO_INTERPRETER_KEYWORDS_HPP
 
 #include <bits/stdc++.h>
 
@@ -52,7 +52,7 @@ set<string> ObjectConstants{
 };
 
 set<string> Operators{
-	"+", "-", "||", "*", "/",
+	"+", "-", "||", "*", "/", "**",
 	"&", "|",
 	"&&", "%", "=", "<", ">",
 	"==", "!=", "<=", ">=",
@@ -70,4 +70,4 @@ set<string> Punctuations{
 	"\"", "\'"
 };
 
-#endif //NEKO_INTERPRETER_KEYWORDS_H
+#endif //NEKO_INTERPRETER_KEYWORDS_HPP

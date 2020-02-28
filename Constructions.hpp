@@ -1,7 +1,7 @@
-#ifndef NEKO_INTERPRETER_CONSTRUCTIONS_H
-#define NEKO_INTERPRETER_CONSTRUCTIONS_H
+#ifndef NEKO_INTERPRETER_CONSTRUCTIONS_HPP
+#define NEKO_INTERPRETER_CONSTRUCTIONS_HPP
 
-#include "expressions.h"
+#include "expressions.hpp"
 
 enum ConstructionType {
   Conditional,
@@ -69,4 +69,4 @@ struct Scope {
   }
 };
 
-#endif //NEKO_INTERPRETER_CONSTRUCTIONS_H
+#endif //NEKO_INTERPRETER_CONSTRUCTIONS_HPP

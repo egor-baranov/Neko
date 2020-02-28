@@ -1,9 +1,9 @@
-#ifndef NEKO_INTERPRETER_FUNCTIONOBJECT_H
-#define NEKO_INTERPRETER_FUNCTIONOBJECT_H
+#ifndef NEKO_INTERPRETER_FUNCTIONOBJECT_HPP
+#define NEKO_INTERPRETER_FUNCTIONOBJECT_HPP
 
-#include "VariableObject.h"
-#include "expressions.h"
-#include "NekoLib.h"
+#include "VariableObject.hpp"
+#include "expressions.hpp"
+#include "NekoLib.hpp"
 
 bool operator>(FunctionObject a, FunctionObject b) {
 	return a.name > b.name;
@@ -144,4 +144,4 @@ FunctionReturned parseFunctionCall(const vector<Token> &input, int &index) {
 	return call(functionName, args, functionCallIndex);
 }
 
-#endif //NEKO_INTERPRETER_FUNCTIONOBJECT_H
+#endif //NEKO_INTERPRETER_FUNCTIONOBJECT_HPP

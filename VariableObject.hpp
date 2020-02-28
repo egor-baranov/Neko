@@ -1,9 +1,9 @@
-#ifndef NEKO_INTERPRETER_VARIABLEOBJECT_H
-#define NEKO_INTERPRETER_VARIABLEOBJECT_H
+#ifndef NEKO_INTERPRETER_VARIABLEOBJECT_HPP
+#define NEKO_INTERPRETER_VARIABLEOBJECT_HPP
 
-#include "token.h"
-#include "exceptions.h"
-#include "expressions.h"
+#include "token.hpp"
+#include "exceptions.hpp"
+#include "expressions.hpp"
 
 bool operator>(VariableObject a, VariableObject b) {
 	return a.name > b.name;
@@ -21,7 +21,11 @@ bool isDeclaredClass(Token token) {
 	return Classes.find(token.source) != Classes.end();
 }
 
-Exception parseVariableAssignment(const vector<Token> &input, int &index) {
+bool isAssignmentOperator(Item item) {
+	return item.token.type == AssignmentOperator;
+}
+
+VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, int &index) {
 	if (input.size() < 3) {
 		return Exception(VariableDeclarationError, getLineIndex(input, index));
 	}
@@ -36,9 +40,10 @@ Exception parseVariableAssignment(const vector<Token> &input, int &index) {
 		return Exception(ConstAssignment, getLineIndex(input, index));
 	}
 	index = nextIndex(input, index);
-	if (input[index].source != "=") {
+	if (input[index].type != AssignmentOperator) {
 		return Exception(VariableAssignmentError, getLineIndex(input, index));
 	}
+	Token assignmentOperator = input[index];
 	index = nextIndex(input, index);
 	ParseExpressionReturned result = parseExpression(input, index);
 	if (result.exception.type != Nothing) {
@@ -48,8 +53,18 @@ Exception parseVariableAssignment(const vector<Token> &input, int &index) {
 	if (calculateReturned.exception.type != Nothing) {
 		return Exception(calculateReturned.exception.type, getLineIndex(input, index));
 	}
-	Variables[name].item = calculateReturned.item;
-	return Exception(Nothing);
+	if (assignmentOperator.source == "=") {
+		Variables[name].item = calculateReturned.item;
+	} else {
+		string s = assignmentOperator.source;
+		auto processed = Process(Variables[name].item, calculateReturned.item,
+		                         getToken(sliceString(s, 0, s.size() - 2)));
+		if (processed.exception.type != Nothing) {
+			return Exception(processed.exception.type, getLineIndex(input, index));
+		}
+		Variables[name].item = processed.item;
+	}
+	return Variables[name].item;
 }
 
 Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
@@ -98,4 +113,4 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 }
 
 
-#endif //NEKO_INTERPRETER_VARIABLEOBJECT_H
+#endif //NEKO_INTERPRETER_VARIABLEOBJECT_HPP

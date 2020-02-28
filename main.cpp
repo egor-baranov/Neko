@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
-#include "interpreter.h"
-#include "helpers.h"
+#include "interpreter.hpp"
+#include "helpers.hpp"
 
 using namespace std;
 

@@ -1,8 +1,8 @@
-#ifndef NEKO_INTERPRETER_EXCEPTIONS_H
-#define NEKO_INTERPRETER_EXCEPTIONS_H
+#ifndef NEKO_INTERPRETER_EXCEPTIONS_HPP
+#define NEKO_INTERPRETER_EXCEPTIONS_HPP
 
 #include <bits/stdc++.h>
-#include "token.h"
+#include "token.hpp"
 
 using namespace std;
 
@@ -308,4 +308,4 @@ Exception semanticErrorAnalysis(vector<Token> input) {
 	return Exception(Nothing);
 }
 
-#endif //NEKO_INTERPRETER_EXCEPTIONS_H
+#endif //NEKO_INTERPRETER_EXCEPTIONS_HPP

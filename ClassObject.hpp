@@ -1,10 +1,10 @@
 #ifndef NEKO_INTERPRETER_CLASSOBJECT_HPP
 #define NEKO_INTERPRETER_CLASSOBJECT_HPP
 
-#include "token.h"
-#include "exceptions.h"
-#include "VariableObject.h"
-#include "FunctionObject.h"
+#include "token.hpp"
+#include "exceptions.hpp"
+#include "VariableObject.hpp"
+#include "FunctionObject.hpp"
 
 bool operator>(ClassObject a, ClassObject b) {
 	return a.name > b.name;
