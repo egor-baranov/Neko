@@ -25,3 +25,6 @@ Neko is a scripting programming language inspired by Kotlin and Python, which is
 ## JetBrains Space workspace
 
 https://neko.jetbrains.space/
+
+## IDE repository:
+https://github.com/egor-baranov/NekoIDE
