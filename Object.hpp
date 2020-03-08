@@ -4,7 +4,41 @@
 #include "helpers.hpp"
 #include "exceptions.hpp"
 
-struct Object {
+class Object {
+  void *value;
+
+  void toString() {
+  }
+};
+
+enum IntValueType {
+
+};
+
+class Int : Object {
+
+  void toString() {
+
+  }
+};
+
+enum FloatValueType {
+
+};
+
+class Float : Object {
+
+};
+
+class Char : Object {
+
+};
+
+class String : Object {
+
+};
+
+class Function : Object {
 
 };
 

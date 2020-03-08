@@ -101,6 +101,10 @@ struct Token {
 		  {Operation, AssignmentOperator, ArithmeticOperator, BitOperator, LogicalOperator, ComparisonOperator}, type);
   }
 
+  bool isKeyword() {
+	  return type == Keyword;
+  }
+
   bool isUnaryOperator() {
 	  return contain({"+", "-", "!", "~"}, source);
   }
@@ -118,7 +122,7 @@ struct Token {
   }
 
   bool isObject() const {
-	  return contain({IntNumber, FloatNumber, StringLiteral, CharLiteral, Name}, type);
+	  return contain({IntNumber, FloatNumber, StringLiteral, CharLiteral, Name, Constant}, type);
   }
 };
 
@@ -155,7 +159,7 @@ Token getToken(string input) {
 		return Token(Operation, input);
 	}
 	if (isNumber(input)) {
-		return Token(IntNumber, input);
+		return Token(contain(input, '.') ? FloatNumber : IntNumber, input);
 	}
 	if (input[0] == '\"' and input[input.size() - 1] == '\"') {
 		return Token(StringLiteral, input);
@@ -180,8 +184,7 @@ vector<Token> tokenize(string input) {
 }
 
 bool isBracketPair(Token left, Token right) {
-	return (left.source == "(" and right.source == ")") or
-	       (left.source == "[" and right.source == "]") or (left.source == "{" and right.source == "}");
+	return contain({"()", "[]", "{}"}, left.source + right.source);
 }
 
 string format(vector<Token> input, bool source = false) {
@@ -198,16 +201,22 @@ string format(vector<Token> input, bool source = false) {
 int getLineIndex(const vector<Token> &input, int index) {
 	int ret = 1;
 	for (int i = 0; i < index; ++i) {
-		if (input[i].type == EOL) ++ret;
+		if (input[i].type == EOL) {
+			++ret;
+		}
 	}
-	if (input[index].type == EOfF) --ret;
+	if (input[index].type == EOfF) {
+		--ret;
+	}
 	return ret;
 }
 
 int prevIndex(vector<Token> input, int index) {
 	if (index <= 0) return 0;
 	--index;
-	while (input[index].type == EOL and index > 0) --index;
+	while (input[index].type == EOL and index > 0) {
+		--index;
+	}
 	return index;
 }
 
@@ -217,7 +226,9 @@ Token prev(vector<Token> input, int index) {
 
 int nextIndex(vector<Token> input, int index) {
 	++index;
-	while (input[index].type == EOL and index < input.size() - 1) ++index;
+	while (input[index].type == EOL and index < input.size() - 1) {
+		++index;
+	}
 	return (index < input.size() - 1 ? index : input.size() - 1);
 }
 
@@ -225,9 +236,12 @@ Token next(vector<Token> input, int index) {
 	return input[nextIndex(input, index)];
 }
 
+// TODO: доделать приоритет унарных операций
 int getPriority(Token token) {
 	string input = token.source;
-	if (not token.isOperator()) throw "Type Error in getPriority";
+	if (not token.isOperator()) {
+		throw "Type Error in getPriority";
+	}
 	if (contain({"||"}, token.source)) {
 		return 2;
 	}
@@ -260,6 +274,9 @@ int getPriority(Token token) {
 	}
 	if (contain({"**"}, token.source)) {
 		return 12;
+	}
+	if (contain({"!"}, token.source)) {
+		return 13;
 	}
 	return 1;
 }

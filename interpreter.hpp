@@ -13,12 +13,31 @@ vector<Token> parse(vector<Token> input) {
 	int end = input.size();
 	for (int i = 0; i < end - 1; ++i) {
 		Token token = input[i];
-		if (token.type == IntNumber and i < end - 2)
+		if (token.type == IntNumber and i < end - 2) {
 			if (input[i + 1].source == "." and input[i + 2].type == IntNumber) {
 				output.push_back(Token(FloatNumber, token.source + "." + input[i + 2].source));
 				i += 2;
 				continue;
 			}
+			if (input[i + 1].source == "." and input[i + 2].type == Name) {
+				string s = input[i + 2].source;
+				if (not isCorrectName(s) and canBeDivided(s)) {
+					pair<string, string> divided = divide(s);
+					output.push_back(getToken(token.source + "." + divided.first));
+					output.push_back(getToken("*"));
+					output.push_back(getToken(divided.second));
+					i += 2;
+					continue;
+				}
+			}
+		}
+		if (token.type == Name and not isCorrectName(token.source) and canBeDivided(token.source)) {
+			pair<string, string> divided = divide(token.source);
+			output.push_back(getToken(divided.first));
+			output.push_back(getToken("*"));
+			output.push_back(getToken(divided.second));
+			continue;
+		}
 		if (contain({"<", "=", "!"}, token.source) and input[i + 1].source == "=") {
 			output.push_back(Token(ComparisonOperator, token.source + "="));
 			++i;

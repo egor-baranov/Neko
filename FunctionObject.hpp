@@ -5,6 +5,7 @@
 #include "expressions.hpp"
 #include "NekoLib.hpp"
 
+
 bool operator>(FunctionObject a, FunctionObject b) {
 	return a.name > b.name;
 }
@@ -19,7 +20,7 @@ bool operator==(FunctionObject a, FunctionObject b) {
 
 Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	Namespace nameSpace = InsideOfFunction;
-	if (input.size() < 6) {
+	if (input.size() - index < 6) {
 		return Exception(FunctionDeclarationError, getLineIndex(input, index));
 	}
 	FunctionObject functionObject = FunctionObject();
@@ -39,9 +40,9 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	if (input[index].source != "(") {
 		return Exception(FunctionDeclarationError, getLineIndex(input, index));
 	}
+	index = nextIndex(input, index);
 	// Аргументы функции
 	while (input[index].source != ")") {
-		index = nextIndex(input, index);
 		FunctionArgument functionArgument;
 		if (input[index].source == "ref") {
 			functionArgument.ref = true;
@@ -67,6 +68,9 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 			return Exception(FunctionDeclarationError, getLineIndex(input, index));
 		}
 		functionObject.args.push_back(functionArgument);
+		if (input[index].source == ",") {
+			index = nextIndex(input, index);
+		}
 	}
 	index = nextIndex(input, index);
 	// тип функции
@@ -87,31 +91,34 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 		if (result.exception.type != Nothing) {
 			return result.exception;
 		}
-		functionObject.representation.push_back(result.source);
+		// functionObject.representation.push_back(result.source);
 	} else {
 		index = nextIndex(input, index);
-		while (input[index].source != "}") {
-			ParseExpressionReturned result = parseExpression(input, index);
-			if (result.exception.type != Nothing) {
-				return result.exception;
+		stack<string> bracketStack;
+		while (!(bracketStack.empty() and input[index].source == "}")) {
+			if (input[index].source == "{") {
+				bracketStack.push(input[index].source);
 			}
-			functionObject.representation.push_back(result.source);
+			if (input[index].source == "}") {
+				bracketStack.pop();
+			}
+			functionObject.representation.push_back(input[index]);
+			index = nextIndex(input, index);
 		}
+		index = nextIndex(input, index);
 	}
 	Functions[functionObject.name] = functionObject;
 	return Exception(Nothing);
 }
 
-// TODO: добавить возвращаемое значение
 FunctionReturned call(string functionName, vector<Item> &args, int functionCallIndex) {
 	if (Functions.find(functionName) != Functions.end()) {
-		Functions[functionName].runWithArgs(args);
+		return Functions[functionName].runWithArgs(args);
 	} else if (BuiltInFunctions.find(functionName) != BuiltInFunctions.end()) {
 		return callBuiltInFunction(functionName, args);
 	} else {
 		return Exception(UndefinedNameUsage, functionCallIndex);
 	}
-	return Exception(Nothing);
 }
 
 FunctionReturned parseFunctionCall(const vector<Token> &input, int &index) {

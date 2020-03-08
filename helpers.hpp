@@ -8,26 +8,28 @@ using namespace std;
 string lStrip(string input) {
 	int left = 0;
 	for (int i = 0; i < input.size(); ++i) {
-		if (input[i] == '\r' or input[i] == ' ' or input[i] == '\n' or input[i] == '\t')
+		if (input[i] == '\r' or input[i] == ' ' or input[i] == '\n' or input[i] == '\t') {
 			++left;
-		else break;
+		} else break;
 	}
 	string ret = "";
-	for (int i = left; i < input.size(); ++i)
+	for (int i = left; i < input.size(); ++i) {
 		ret += input[i];
+	}
 	return ret;
 }
 
 string rStrip(string input) {
 	int right = 0;
 	for (int i = input.size() - 1; i >= 0; --i) {
-		if (input[i] == '\r' or input[i] == ' ' or input[i] == '\n' or input[i] == '\t')
+		if (input[i] == '\r' or input[i] == ' ' or input[i] == '\n' or input[i] == '\t') {
 			++right;
-		else break;
+		} else break;
 	}
 	string ret = "";
-	for (int i = 0; i < input.size() - right; ++i)
+	for (int i = 0; i < input.size() - right; ++i) {
 		ret += input[i];
+	}
 	return ret;
 }
 
@@ -39,8 +41,12 @@ string strip(string input) {
 template<typename T>
 set<T> unite(const set<T> &s1, const set<T> &s2) {
 	set<T> ret;
-	for (T i : s1) ret.insert(i);
-	for (T i: s2) ret.insert(i);
+	for (T i : s1) {
+		ret.insert(i);
+	}
+	for (T i: s2) {
+		ret.insert(i);
+	}
 	return ret;
 }
 
@@ -151,20 +157,27 @@ int count(string input, char c) {
 	return ret;
 }
 
+bool contain(string input, char c) {
+	return count(input, c) > 0;
+}
+
 bool isNumber(string input) {
-	if (input[0] > '9' or input[0] < '0')
+	if ((input[0] > '9' or input[0] < '0') and input[0] != '-') {
 		return false;
+	}
 	int dots = 0;
 	for (int i = 1; i < input.size() - 1; ++i) {
 		if (input[i] == '.') {
 			++dots;
 			continue;
 		}
-		if (input[i] > '9' or input[i] < '0')
+		if (input[i] > '9' or input[i] < '0') {
 			return false;
+		}
 	}
-	if (input.back() > '9' or input.back() < '0')
+	if (input.back() > '9' or input.back() < '0') {
 		return false;
+	}
 	return dots <= 1;
 }
 
@@ -182,33 +195,71 @@ bool isDigitOrLetter(char c) {
 
 bool isCorrectName(string input) {
 	if (input.empty()) return false;
-	if (not isLetter(input[0]) and input[0] != '_')
+	if (not isLetter(input[0]) and input[0] != '_') {
 		return false;
-	for (int c: input)
-		if (!isDigit(c) and !isLetter(c) and c != '_')
+	}
+	for (int c: input) {
+		if (!isDigit(c) and !isLetter(c) and c != '_') {
 			return false;
+		}
+	}
 	return true;
+}
+
+bool canBeDivided(string input) {
+	string number, name;
+	bool canBeNum = true;
+	for (auto i: input) {
+		if (canBeNum and (i == '.' or isDigit(i))) {
+			number += i;
+			continue;
+		}
+		canBeNum = false;
+		name += i;
+	}
+	return isNumber(number) and isCorrectName(name);
+}
+
+pair<string, string> divide(string input) {
+	string number, name;
+	bool canBeNum = true;
+	for (char c : input) {
+		if (canBeNum and (c == '.' or isDigit(c))) {
+			number += c;
+			continue;
+		}
+		canBeNum = false;
+		name += c;
+	}
+	return {number, name};
 }
 
 template<typename T>
 bool contain(vector<T> v, T elem) {
-	for (auto i: v)
-		if (i == elem) return true;
+	for (auto i: v) {
+		if (i == elem) {
+			return true;
+		}
+	}
 	return false;
 }
 
 template<typename T>
 bool containAny(vector<T> v, vector<T> vE) {
-	for (auto i : vE)
-		if ((contain(v, i))) return true;
+	for (auto i : vE) {
+		if ((contain(v, i))) {
+			return true;
+		}
+	}
 	return false;
 }
 
 template<typename T>
 bool containAll(vector<T> v, vector<T> vE) {
 	bool ret = true;
-	for (auto i : vE)
+	for (auto i : vE) {
 		ret &= contain(v, i);
+	}
 	return ret;
 }
 
@@ -245,5 +296,26 @@ struct Interval {
 
   Interval(int l, int r) : left(l), right(r) {}
 };
+
+string formatFloatNumber(string number) {
+	assert(contain(number, '.'));
+	int zeroPostfix = 0;
+	reverse(number.begin(), number.end());
+	for (int i = 0; i < number.size() - 1; ++i) {
+		if (number[i] == '0' and number[i + 1] != '.') {
+			++zeroPostfix;
+		} else break;
+	}
+	reverse(number.begin(), number.end());
+	return sliceString(number, 0, number.size() - zeroPostfix - 1);
+}
+
+string multiply(string input, int count) {
+	string output;
+	for (int i = 0; i < count; ++i) {
+		output += input;
+	}
+	return output;
+}
 
 #endif //NEKO_INTERPRETER_HELPERS_HPP

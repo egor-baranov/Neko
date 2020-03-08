@@ -7,6 +7,7 @@
 using namespace std;
 
 enum ExType {
+  OperationArgumentExcess,
   ConstAssignment, // присвоение значения константе
   OperandTypeError, // нет перегруженного оператора для выполнения операции, например 2 + "s"
   TypeError, // несовместимость типов
@@ -42,6 +43,7 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
+	{OperationArgumentExcess,     "OperationArgumentExcess"},
 	{ConstAssignment,             "ConstAssignment"},
 	{OperandTypeError,            "OperandTypeError"},
 	{TypeError,                   "TypeError"},
@@ -147,7 +149,7 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
 		if (token.type == CharLiteral and token.source.size() != 3)
 			return Exception(CharFormatError, lineIndex);
 		// обработка неправильных имен
-		if (token.type == Name and not isCorrectName(token.source)) {
+		if (token.type == Name and not isCorrectName(token.source) and not canBeDivided(token.source)) {
 			if (token.source[0] == '\"' or token.source[0] == '\'') {
 				return Exception(QuotesSequenceError, lineIndex);
 			}
@@ -222,10 +224,10 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
 
 		if (token.type == IntNumber) {
 			if (i != 0) {
-				if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, prevToken.type))
+				if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i - 1].type))
 					return Exception(SyntaxError, lineIndex);
 			}
-			if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, nextToken.type)) {
+			if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i + 1].type)) {
 				return Exception(SyntaxError, lineIndex);
 			}
 		}

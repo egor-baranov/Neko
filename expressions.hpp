@@ -4,6 +4,7 @@
 #include "token.hpp"
 #include <variant>
 #include "OperationProcessing.hpp"
+#include "execution.hpp"
 
 Type getType(Token token) {
 	if (token.type == IntNumber) {
@@ -32,24 +33,31 @@ Type getType(Token token) {
 
 void *getValue(const Type &type, const Token token) {
 	switch (type) {
-		case IntType:
+		case IntType: {
 			return static_cast<void *>(new int(stoi(token.source)));
-		case FloatType:
+		}
+		case FloatType: {
 			return static_cast<void *>(new double(stod(token.source)));
+		}
 		case StringType: {
 			string ret = sliceString(token.source, 1, token.source.size() - 2);
 			return static_cast<void *> (new string(ret));
 		}
-		case CharType:
+		case CharType: {
 			return static_cast<void *>(new char(token.source[1]));
-		case BoolType:
+		}
+		case BoolType: {
 			return static_cast<void *>(new bool(token.source == "True"));
-		case NoneType:
+		}
+		case NoneType: {
 			return static_cast<void *>(nullptr);
-		case OperationType:
+		}
+		case OperationType: {
 			break;
-		case UndefinedType:
+		}
+		case UndefinedType: {
 			break;
+		}
 	}
 }
 
@@ -91,6 +99,7 @@ struct Item {
 
   Item(void *v, Type t) : value(v), type(t) {
 	  source = toString();
+	  token = getToken(source);
   }
 
   string toString() {
@@ -104,7 +113,7 @@ struct Item {
 		  return to_string(*static_cast<int *>(value));
 	  }
 	  if (type == FloatType) {
-		  return to_string(*static_cast<double *>(value));
+		  return formatFloatNumber(to_string(*static_cast<double *>(value)));
 	  }
 	  if (type == BoolType) {
 		  return *static_cast<bool *>(value) ? "True" : "False";
@@ -119,6 +128,8 @@ struct Item {
 struct Expression {
   vector<Item> content;
 };
+
+Exception execute(vector<Token> input);
 
 struct VariableObject {
   bool isMutable = true;
@@ -138,7 +149,7 @@ struct FunctionObject {
   string name = "";
   string typeName = "Any";
   int startIndex = -1;
-  vector<Expression> representation;
+  vector<Token> representation;
   vector<FunctionArgument> args;
 
   Exception runWithArgs(vector<Item> variables) {
@@ -149,12 +160,16 @@ struct FunctionObject {
 	  if (variables.size() > args.size()) {
 		  return Exception(FunctionArgumentExcess, startIndex);
 	  }
+
+	  execute(representation);
+	  return Nothing;
   }
 };
 
 set<string> BuiltInFunctions{
 	"print", "println",
-	"readLine", "readInt", "readFloat", "readChar", "readBool"
+	"readLine", "readInt", "readFloat", "readChar", "readString", "readBool",
+	"sin", "cos", "tg", "ctg"
 };
 
 struct ClassObject {
@@ -207,7 +222,7 @@ bool isLeftAssociative(Item item) {
 	return item.source != "**";
 }
 
-// TODO: FIX
+// TODO: добавить унарные операции
 vector<Item> intoPostfixNotation(vector<Item> input) {
 	stack<Token> operations;
 	vector<Item> output;
@@ -261,10 +276,57 @@ struct ProcessReturned {
   ProcessReturned(Exception e) : item(""), exception(e) {}
 };
 
+bool isNumber(Item item) {
+	return contain({IntType, FloatType}, item.type);
+}
+
+bool possibleToProcess(Item &a, Item &b, Token op) {
+	if (a.type == b.type) {
+		return true;
+	}
+	if (isNumber(a) and isNumber(b)) {
+		return true;
+	}
+	if (op.source == "*" and
+	    ((a.type == IntType and b.type == StringType) or (a.type == StringType and b.type == IntType))) {
+		return true;
+	}
+	if (op.source == "+" and
+	    ((a.type == CharType and b.type == StringType) or (a.type == StringType and b.type == CharType))) {
+		return true;
+	}
+}
+
 // применение оператора к двум операндам
 ProcessReturned Process(Item &a, Item &b, Token op) {
-	if (a.type != b.type) {
+	if (a.type != b.type and not(isNumber(a) and isNumber(b)) and not possibleToProcess(a, b, op)) {
 		return Exception(TypeError);
+	}
+	// умножение строки на число
+	if (op.source == "*") {
+		if (a.type == StringType and b.type == IntType) {
+			string s = *static_cast<string *>(a.value);
+			int x = *static_cast<int *>(b.value);
+			return Item(static_cast<void *>(new string(multiply(s, x))), StringType);
+		}
+		if (a.type == IntType and b.type == StringType) {
+			string s = *static_cast<string *>(b.value);
+			int x = *static_cast<int *>(a.value);
+			return Item(static_cast<void *>(new string(multiply(s, x))), StringType);
+		}
+	}
+	// сложение String и Char
+	if (op.source == "+") {
+		if (a.type == StringType and b.type == CharType) {
+			string s = *static_cast<string *>(a.value);
+			char x = *static_cast<char *>(b.value);
+			return Item(static_cast<void *>(new string(x + s)), StringType);
+		}
+		if (a.type == CharType and b.type == StringType) {
+			string s = *static_cast<string *>(b.value);
+			char x = *static_cast<char *>(a.value);
+			return Item(static_cast<void *>(new string(s + x)), StringType);
+		}
 	}
 	if (not contain(possibleOperations(a.type), op.source)) {
 		return Exception(OperandTypeError);
@@ -304,6 +366,41 @@ ProcessReturned Process(Item &a, Item &b, Token op) {
 		}
 		return Item(static_cast<void *>(new string(processOperation(x, y, op.source))), StringType);
 	}
+	if (a.type == CharType) {
+		char x = *static_cast<char *>(a.value), y = *static_cast<char *>(b.value);
+		if (isComparisonOperation(op.source)) {
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+		}
+		return Item(static_cast<void *>(new char(processOperation(x, y, op.source))), CharType);
+	}
+}
+
+ProcessReturned ProcessUnary(Item &a, Token op) {
+	if (not contain({IntType, FloatType, BoolType}, a.type)) {
+		return Exception(IncorrectOperationArguments);
+	}
+	if (not contain({"+", "-", "!"}, op.source)) {
+		return Exception(OperationArgumentExcess);
+	}
+	if (a.type == IntType) {
+		int x = *static_cast<int *>(a.value);
+		if (op.source == "-") x = -x;
+		if (op.source == "!") x = !x;
+		return Item(static_cast<void *>(new int(x)), IntType);
+	}
+	if (a.type == FloatType) {
+		double x = *static_cast<double *>(a.value);
+		if (op.source == "-") x = -x;
+		if (op.source == "!") x = !x;
+		return Item(static_cast<void *>(new double(x)), FloatType);
+	}
+	if (a.type == BoolType) {
+		bool x = *static_cast<bool *>(a.value);
+		if (op.source != "!") {
+			return Exception(IncorrectOperationArguments);
+		}
+		return Item(static_cast<void *>(new bool(!x)), BoolType);
+	}
 }
 
 struct CalculateReturned {
@@ -328,24 +425,35 @@ CalculateReturned Calculate(Expression expression) {
 	}
 
 	vector<Item> postfixNotation = intoPostfixNotation(expression.content);
-	stack<Item> variables;
+	stack<Item> values;
 	// вычисление выражений
 	for (auto elem: postfixNotation) {
 		if (elem.type == OperationType) {
-			Item a = variables.top();
-			variables.pop();
-			Item b = variables.top();
-			variables.pop();
+			if (values.empty()) {
+				return Exception(RuntimeError);
+			}
+			Item a = values.top();
+			values.pop();
+			if (values.empty() or elem.source == "!") {
+				auto processedUnary = ProcessUnary(a, elem.token);
+				if (processedUnary.exception.type != Nothing) {
+					return processedUnary.exception;
+				}
+				values.push(processedUnary.item);
+				continue;
+			}
+			Item b = values.top();
+			values.pop();
 			auto processed = Process(a, b, elem.token);
 			if (processed.exception.type != Nothing) {
 				return processed.exception;
 			}
-			variables.push(processed.item);
+			values.push(processed.item);
 		} else {
-			variables.push(elem);
+			values.push(elem);
 		}
 	}
-	return variables.top();
+	return values.top();
 }
 
 struct VariableAssignmentReturned {
@@ -372,30 +480,31 @@ struct ParseExpressionReturned {
   ParseExpressionReturned(Exception e) : exception(e) {}
 };
 
+
+// TODO: FIX
 ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) {
 	Token token = input[index];
 	int end = input.size() - 1;
 	Expression ret;
 	stack<Token> bracketStack;
+	int firstIndex = index;
 	while (index < end) {
 		token = input[index];
 		Token prevToken = prev(input, index), nextToken = next(input, index);
 		// условия выхода из expression-а
 		if (token.type == EOE or (token.isRightBracket() and bracketStack.empty()) or token.source == ",") {
-			break;
+			if (index != firstIndex) {
+				// index = nextIndex(input, index);
+				break;
+			}
 		}
 		if (index != 0) {
-			if (prevToken.isObject() and token.isObject()) {
-				break;
-			}
-			if (prevToken.isRightBracket() and token.isObject()) {
-				break;
-			}
-			if (prevToken.isObject() and token.isLeftBracket()) {
-				break;
-			}
-			if (prevToken.isRightBracket() and token.isLeftBracket()) {
-				break;
+			if ((prevToken.isObject() or prevToken.isRightBracket() or prevToken.isKeyword()) and
+			    (token.isObject() or token.isLeftBracket() or token.isKeyword())) {
+				if (index != firstIndex) {
+					// index = nextIndex(input, index);
+					break;
+				}
 			}
 		}
 		if (token.isBracket()) {
@@ -411,7 +520,7 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 		}
 		if (token.type == Name) {
 			if (nameDeclaration(token.source) == Undeclared) {
-				return Exception(UndefinedNameUsage);
+				return Exception(UndefinedNameUsage, getLineIndex(input, index));
 			}
 			if (nameDeclaration(token.source) == DeclaredVariable and nextToken.source != ".") {
 				if (nextToken.source == "=") {
@@ -438,6 +547,10 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 		ret.content.push_back(Item(token));
 		index = nextIndex(input, index);
 	}
+//	if (not contain({EOE, EOL}, input[index - 1].type) and not contain({EOE, EOL}, token.type) and
+//	    not token.isRightBracket() and token.source != ",") {
+//		return Exception(SyntaxError);
+//	}
 	return ret;
 }
 

@@ -18,7 +18,8 @@ enum Type {
 vector<string> possibleOperations(Type argType) {
 	switch (argType) {
 		case IntType: {
-			return {"+", "-", "*", "/", "**", "%", "==", "!=", ">=", "<=", ">", "<"};
+			return {"+", "-", "*", "/", "**", "%", "&", "|", "^", ">>", "<<",
+			        "==", "!=", ">=", "<=", ">", "<"};
 		}
 		case FloatType: {
 			return {"+", "-", "*", "/", "**", "%", "==", "!=", ">=", "<=", ">", "<"};
@@ -27,7 +28,8 @@ vector<string> possibleOperations(Type argType) {
 			return {"+", "==", "!=", ">=", "<=", ">", "<"};
 		}
 		case CharType: {
-			return {"==", "!=", ">=", "<=", ">", "<"};
+			return {"+", "-", "*", "/", "**", "%", "&", "|", "^", ">>", "<<",
+			        "==", "!=", ">=", "<=", ">", "<"};
 		}
 		case BoolType: {
 			return {"&&", "||", "==", "!="};
@@ -62,31 +64,25 @@ int processOperation(int b, int a, string op) {
 		return a / b;
 	}
 	if (op == "**") {
-		return pow(b, a);
+		return pow(a, b);
 	}
 	if (op == "%") {
 		return a % b;
 	}
-}
-
-bool compare(int b, int a, string op) {
-	if (op == "==") {
-		return a == b;
+	if (op == "&") {
+		return b & a;
 	}
-	if (op == "!=") {
-		return a != b;
+	if (op == "|") {
+		return b | a;
 	}
-	if (op == ">=") {
-		return a >= b;
+	if (op == "^") {
+		return b ^ a;
 	}
-	if (op == "<=") {
-		return a <= b;
+	if (op == ">>") {
+		return b >> a;
 	}
-	if (op == ">") {
-		return a > b;
-	}
-	if (op == "<") {
-		return a < b;
+	if (op == "<<") {
+		return b << a;
 	}
 }
 
@@ -106,28 +102,9 @@ double processOperation(double b, double a, string op) {
 	if (op == "**") {
 		return pow(a, b);
 	}
+
 }
 
-bool compare(double b, double a, string op) {
-	if (op == "==") {
-		return a == b;
-	}
-	if (op == "!=") {
-		return a != b;
-	}
-	if (op == ">=") {
-		return a >= b;
-	}
-	if (op == "<=") {
-		return a <= b;
-	}
-	if (op == ">") {
-		return a > b;
-	}
-	if (op == "<") {
-		return a < b;
-	}
-}
 
 bool processOperation(bool b, bool a, string op) {
 	if (op == "&&") {
@@ -150,7 +127,8 @@ string processOperation(string b, string a, string op) {
 	}
 }
 
-bool compare(string b, string a, string op) {
+template<typename T>
+bool compare(T b, T a, string op) {
 	if (op == "==") {
 		return a == b;
 	}
@@ -168,6 +146,42 @@ bool compare(string b, string a, string op) {
 	}
 	if (op == "<") {
 		return a < b;
+	}
+}
+
+char processOperation(char b, char a, string op) {
+	if (op == "+") {
+		return a + b;
+	}
+	if (op == "-") {
+		return a - b;
+	}
+	if (op == "*") {
+		return a * b;
+	}
+	if (op == "/") {
+		return a / b;
+	}
+	if (op == "**") {
+		return pow(a, b);
+	}
+	if (op == "%") {
+		return a % b;
+	}
+	if (op == "&") {
+		return b & a;
+	}
+	if (op == "|") {
+		return b | a;
+	}
+	if (op == "^") {
+		return b ^ a;
+	}
+	if (op == ">>") {
+		return b >> a;
+	}
+	if (op == "<<") {
+		return b << a;
 	}
 }
 

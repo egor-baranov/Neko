@@ -47,7 +47,7 @@ VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, i
 	index = nextIndex(input, index);
 	ParseExpressionReturned result = parseExpression(input, index);
 	if (result.exception.type != Nothing) {
-		return result.exception;
+		return Exception(result.exception.type, getLineIndex(input, index));
 	}
 	CalculateReturned calculateReturned = Calculate(result.source);
 	if (calculateReturned.exception.type != Nothing) {
@@ -101,7 +101,7 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 	index = nextIndex(input, index);
 	ParseExpressionReturned result = parseExpression(input, index);
 	if (result.exception.type != Nothing) {
-		return result.exception;
+		return Exception(result.exception.type, getLineIndex(input, index));
 	}
 	CalculateReturned calculateReturned = Calculate(result.source);
 	if (calculateReturned.exception.type != Nothing) {

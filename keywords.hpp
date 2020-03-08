@@ -28,17 +28,17 @@ set<string> BuiltInClasses{
 };
 
 set<string> Keywords{
-	"var", "val",
-	"and", "or", "not", "xor", "in",
+	"var", "val", "in",
 	"for", "while",
-	"if", "else",
+	"if", "else", "elif",
 	"get", "set", "field", "value",
 	"fun", "lambda", "return", "yield", "break", "continue",
 	"class", "this", "as", "is", "new", "delete",
 	"public", "private", "protected",
 	"static", "sealed", "abstract",
 	"from", "import",
-	"thread", "ref", "out"
+	"thread", "ref",
+	"until", "downTo"
 };
 
 set<string> Constants{
@@ -59,7 +59,8 @@ set<string> Operators{
 	"++", "--",
 	"<<", ">>", "!", "=", "<<<", ">>>",
 	"^", "~",
-	"+=", "-=", "*=", "**=", "^=", "&=", "|=", "/=", "%="
+	"+=", "-=", "*=", "**=", "^=", "&=", "|=", "/=", "%=",
+	"and", "or", "not", "xor"
 };
 
 set<string> Punctuations{
