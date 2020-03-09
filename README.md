@@ -25,7 +25,7 @@ Neko is a scripting programming language inspired by Kotlin and Python, which is
 * Many standard functions and data structures based on C ++ implementation (ArrayList implements std::vector, Set implements std::set, Map implements std::map, etc)
 * Support of syntax features implemented in Kotlin, Python, Go and C++, like ability to use elif instead of else if or various initialization methods, allowing the syntax of Kotlin (using var / val), Go (with :=), and Python (without anything)
 
-## JetBrains Space workspace
+## JetBrains Space workspace:
 
 https://neko.jetbrains.space/
 
