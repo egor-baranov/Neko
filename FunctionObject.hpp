@@ -5,25 +5,24 @@
 #include "expressions.hpp"
 #include "NekoLib.hpp"
 
-
-bool operator>(FunctionObject a, FunctionObject b) {
+bool operator>(Function a, Function b) {
 	return a.name > b.name;
 }
 
-bool operator<(FunctionObject a, FunctionObject b) {
+bool operator<(Function a, Function b) {
 	return a.name < b.name;
 }
 
-bool operator==(FunctionObject a, FunctionObject b) {
+bool operator==(Function a, Function b) {
 	return a.name == b.name;
 }
 
 Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
-	Namespace nameSpace = InsideOfFunction;
 	if (input.size() - index < 6) {
 		return Exception(FunctionDeclarationError, getLineIndex(input, index));
 	}
-	FunctionObject functionObject = FunctionObject();
+	Function functionObject = Function();
+	functionObject.startIndex = getLineIndex(input, index);
 	if (not contain({"fun", "lambda"}, input[index].source)) {
 		return Exception(FunctionDeclarationError, getLineIndex(input, index));
 	}
@@ -61,7 +60,7 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 			if (not isBuildInType(input[index]) and not isDeclaredClass(input[index])) {
 				return Exception(UnknownTypeError, getLineIndex(input, index));
 			}
-			functionArgument.typeName = input[index].source;
+			functionArgument.type = input[index].source;
 			index = nextIndex(input, index);
 		}
 		if (not contain({")", ","}, input[index].source)) {
@@ -79,7 +78,10 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 		if (input[index].type != Name) {
 			return Exception(FunctionDeclarationError, getLineIndex(input, index));
 		}
-		functionObject.typeName = input[index].source;
+		if (not isBuildInType(input[index]) and not isDeclaredClass(input[index])) {
+			return Exception(UnknownTypeError, getLineIndex(input, index));
+		}
+		functionObject.type = input[index].source;
 		index = nextIndex(input, index);
 	}
 	if (not contain({"=", "{"}, input[index].source)) {
@@ -150,5 +152,7 @@ FunctionReturned parseFunctionCall(const vector<Token> &input, int &index) {
 	index = nextIndex(input, index);
 	return call(functionName, args, functionCallIndex);
 }
+
+// TODO: add returned value and argument check
 
 #endif //NEKO_INTERPRETER_FUNCTIONOBJECT_HPP

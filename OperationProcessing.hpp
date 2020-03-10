@@ -15,6 +15,51 @@ enum Type {
   UndefinedType,
 };
 
+string toString(Type t) {
+	switch (t) {
+		case IntType:
+			return "Int";
+		case FloatType:
+			return "Float";
+		case StringType:
+			return "String";
+		case CharType:
+			return "Char";
+		case BoolType:
+			return "Bool";
+		case NoneType:
+			return "NoneType";
+		case OperationType:
+			return "Operation";
+		case UndefinedType:
+			break;
+	}
+}
+
+Type toType(string s) {
+	if (s == "Int") {
+		return IntType;
+	}
+	if (s == "Float") {
+		return FloatType;
+	}
+	if (s == "String") {
+		return StringType;
+	}
+	if (s == "Char") {
+		return CharType;
+	}
+	if (s == "Bool") {
+		return BoolType;
+	}
+	if (s == "NoneType") {
+		return NoneType;
+	}
+	if (s == "Operation") {
+		return OperationType;
+	}
+}
+
 vector<string> possibleOperations(Type argType) {
 	switch (argType) {
 		case IntType: {
@@ -102,7 +147,6 @@ double processOperation(double b, double a, string op) {
 	if (op == "**") {
 		return pow(a, b);
 	}
-
 }
 
 

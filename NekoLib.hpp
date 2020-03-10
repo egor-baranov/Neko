@@ -35,8 +35,8 @@ FunctionReturned readInt(vector<Item> &input) {
 	}
 	string s;
 	cin >> s;
-	Item ret = Item(getToken(s), IntType);
-	if (ret.type != IntType) {
+	Item ret = Item(getToken(s), "Int");
+	if (ret.type != "Int") {
 		return Exception(TypeError);
 	}
 	return ret;
@@ -48,8 +48,8 @@ FunctionReturned readFloat(vector<Item> &input) {
 	}
 	string s;
 	cin >> s;
-	Item ret = Item(getToken(s), FloatType);
-	if (ret.type != FloatType) {
+	Item ret = Item(getToken(s), "Float");
+	if (ret.type != "Float") {
 		return Exception(TypeError);
 	}
 	return ret;
@@ -61,8 +61,8 @@ FunctionReturned readString(vector<Item> &input) {
 	}
 	string s;
 	cin >> s;
-	Item ret = Item(getToken("\"" + s + "\""), StringType);
-	if (ret.type != StringType) {
+	Item ret = Item(getToken("\"" + s + "\""), "String");
+	if (ret.type != "String") {
 		return Exception(TypeError);
 	}
 	return ret;
@@ -77,8 +77,8 @@ FunctionReturned readChar(vector<Item> &input) {
 	if (s.size() != 1) {
 		return Exception(CharFormatError);
 	}
-	Item ret = Item(getToken("\'" + s + "\'"), CharType);
-	if (ret.type != CharType) {
+	Item ret = Item(getToken("\'" + s + "\'"), "Char");
+	if (ret.type != "Char") {
 		return Exception(TypeError);
 	}
 	return ret;
@@ -90,8 +90,8 @@ FunctionReturned readBool(vector<Item> &input) {
 	}
 	string s;
 	cin >> s;
-	Item ret = Item(getToken(s), BoolType);
-	if (ret.type != BoolType) {
+	Item ret = Item(getToken(s), "Bool");
+	if (ret.type != "Bool") {
 		return Exception(TypeError);
 	}
 	return ret;

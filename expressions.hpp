@@ -5,34 +5,35 @@
 #include <variant>
 #include "OperationProcessing.hpp"
 #include "execution.hpp"
+#include "Object.hpp"
 
-Type getType(Token token) {
+string getType(Token token) {
 	if (token.type == IntNumber) {
-		return IntType;
+		return toString(IntType);
 	}
 	if (token.type == FloatNumber) {
-		return FloatType;
+		return toString(FloatType);
 	}
 	if (token.type == StringLiteral) {
-		return StringType;
+		return toString(StringType);
 	}
 	if (token.type == CharLiteral) {
-		return CharType;
+		return toString(CharType);
 	}
 	if (contain({"True", "False"}, token.source)) {
-		return BoolType;
+		return toString(BoolType);
 	}
 	if (token.source == "None") {
-		return NoneType;
+		return toString(NoneType);
 	}
 	if (token.isOperator()) {
-		return OperationType;
+		return toString(OperationType);
 	}
-	return NoneType;
+	return toString(NoneType);
 }
 
-void *getValue(const Type &type, const Token token) {
-	switch (type) {
+void *getValue(const string &type, const Token token) {
+	switch (toType(type)) {
 		case IntType: {
 			return static_cast<void *>(new int(stoi(token.source)));
 		}
@@ -62,17 +63,49 @@ void *getValue(const Type &type, const Token token) {
 }
 
 struct Item {
+  public:
   Token token = Token(None, "");
   string source;
   void *value;
-  Type type = NoneType;
+  string type = "NoneType";
 
   ~Item() {
-	  // TODO: переопределить деструктор для value
+	  if (value != NULL) {
+		  switch (toType(type)) {
+			  case IntType: {
+				  int tmpInt = *static_cast<int *>(value);
+				  break;
+			  }
+			  case FloatType: {
+				  float tmpFloat = *static_cast<float *>(value);
+				  break;
+			  }
+			  case StringType: {
+				  string tmpString = *static_cast<string *>(value);
+				  break;
+			  }
+			  case CharType: {
+				  char tmpChar = *static_cast<char *>(value);
+				  break;
+			  }
+			  case BoolType: {
+				  bool tmpBool = *static_cast<bool *>(value);
+				  break;
+			  }
+			  case NoneType: {
+				  nullptr_t tmpNullptr = *static_cast<nullptr_t *>(value);
+				  break;
+			  }
+			  case OperationType:
+				  break;
+			  case UndefinedType:
+				  break;
+		  }
+	  }
   }
 
   bool isNumber() {
-	  return contain({FloatType, IntType}, type);
+	  return contain({"Float", "Int"}, type);
   }
 
   Item(Token init) {
@@ -82,7 +115,7 @@ struct Item {
 	  source = init.source;
   }
 
-  Item(Token init, Type t) {
+  Item(Token init, string t) {
 	  token = init;
 	  type = t;
 	  value = getValue(t, init);
@@ -97,29 +130,35 @@ struct Item {
 	  source = init.source;
   }
 
-  Item(void *v, Type t) : value(v), type(t) {
+  Item(void *v, string t) : value(v), type(t) {
 	  source = toString();
 	  token = getToken(source);
   }
 
   string toString() {
-	  if (type == StringType) {
-		  return *static_cast<string *>(value);
-	  }
-	  if (type == CharType) {
-		  return string(1, *static_cast<char *>(value));
-	  }
-	  if (type == IntType) {
-		  return to_string(*static_cast<int *>(value));
-	  }
-	  if (type == FloatType) {
-		  return formatFloatNumber(to_string(*static_cast<double *>(value)));
-	  }
-	  if (type == BoolType) {
-		  return *static_cast<bool *>(value) ? "True" : "False";
-	  }
-	  if (type == NoneType) {
-		  return "None";
+	  switch (toType(type)) {
+		  case StringType: {
+			  return *static_cast<string *>(value);
+		  }
+		  case CharType: {
+			  return string(1, *static_cast<char *>(value));
+		  }
+		  case IntType: {
+			  return to_string(*static_cast<int *>(value));
+		  }
+		  case FloatType: {
+			  return formatFloatNumber(to_string(*static_cast<double *>(value)));
+		  }
+		  case BoolType: {
+			  return *static_cast<bool *>(value) ? "True" : "False";
+		  }
+		  case NoneType: {
+			  return "None";
+		  }
+		  case OperationType:
+			  break;
+		  case UndefinedType:
+			  break;
 	  }
   }
 };
@@ -134,21 +173,21 @@ Exception execute(vector<Token> input);
 struct VariableObject {
   bool isMutable = true;
   string name = "";
-  string typeName = "Any";
+  string type = "Any";
   Item item = Item(emptyToken);
 };
 
 struct FunctionArgument {
   bool ref = false;
   string name = "";
-  string typeName = "Any";
+  string type = "Any";
 };
 
-struct FunctionObject {
+struct Function : Object {
   bool isLambda = false;
   string name = "";
-  string typeName = "Any";
-  int startIndex = -1;
+  string type = "Any";
+  int startIndex = -1000;
   vector<Token> representation;
   vector<FunctionArgument> args;
 
@@ -161,7 +200,17 @@ struct FunctionObject {
 		  return Exception(FunctionArgumentExcess, startIndex);
 	  }
 
-	  execute(representation);
+	  for (int i = 0; i < args.size(); ++i) {
+		  if (args[i].type == variables[i].type or args[i].type == "Any") {
+			  continue;
+		  }
+		  return TypeError;
+	  }
+
+	  Exception exception = execute(representation);
+	  if (exception.type != Nothing) {
+		  return Exception(exception.type, exception.line + startIndex);
+	  }
 	  return Nothing;
   }
 };
@@ -194,7 +243,7 @@ FunctionReturned parseFunctionCall(const vector<Token> &input, int &index);
 const FunctionReturned VoidResult = {Item(getToken("")), Nothing, true};
 
 map<string, VariableObject> Variables;
-map<string, FunctionObject> Functions;
+map<string, Function> Functions;
 map<string, ClassObject> Classes;
 
 enum nameType {
@@ -218,7 +267,7 @@ nameType nameDeclaration(string name) {
 }
 
 bool isLeftAssociative(Item item) {
-	assert(item.type == OperationType);
+	assert(toType(item.type) == OperationType);
 	return item.source != "**";
 }
 
@@ -277,7 +326,7 @@ struct ProcessReturned {
 };
 
 bool isNumber(Item item) {
-	return contain({IntType, FloatType}, item.type);
+	return contain({toString(IntType), toString(FloatType)}, item.type);
 }
 
 bool possibleToProcess(Item &a, Item &b, Token op) {
@@ -288,11 +337,11 @@ bool possibleToProcess(Item &a, Item &b, Token op) {
 		return true;
 	}
 	if (op.source == "*" and
-	    ((a.type == IntType and b.type == StringType) or (a.type == StringType and b.type == IntType))) {
+	    ((a.type == "Int" and b.type == "String") or (a.type == "String" and b.type == "Int"))) {
 		return true;
 	}
 	if (op.source == "+" and
-	    ((a.type == CharType and b.type == StringType) or (a.type == StringType and b.type == CharType))) {
+	    ((a.type == "Char" and b.type == "String") or (a.type == "String" and b.type == "Char"))) {
 		return true;
 	}
 }
@@ -304,102 +353,102 @@ ProcessReturned Process(Item &a, Item &b, Token op) {
 	}
 	// умножение строки на число
 	if (op.source == "*") {
-		if (a.type == StringType and b.type == IntType) {
+		if (a.type == "String" and b.type == "Int") {
 			string s = *static_cast<string *>(a.value);
 			int x = *static_cast<int *>(b.value);
-			return Item(static_cast<void *>(new string(multiply(s, x))), StringType);
+			return Item(static_cast<void *>(new string(multiply(s, x))), "String");
 		}
-		if (a.type == IntType and b.type == StringType) {
+		if (a.type == "Int" and b.type == "String") {
 			string s = *static_cast<string *>(b.value);
 			int x = *static_cast<int *>(a.value);
-			return Item(static_cast<void *>(new string(multiply(s, x))), StringType);
+			return Item(static_cast<void *>(new string(multiply(s, x))), "String");
 		}
 	}
 	// сложение String и Char
 	if (op.source == "+") {
-		if (a.type == StringType and b.type == CharType) {
+		if (a.type == "String" and b.type == "Char") {
 			string s = *static_cast<string *>(a.value);
 			char x = *static_cast<char *>(b.value);
-			return Item(static_cast<void *>(new string(x + s)), StringType);
+			return Item(static_cast<void *>(new string(x + s)), "String");
 		}
-		if (a.type == CharType and b.type == StringType) {
+		if (a.type == "Char" and b.type == "String") {
 			string s = *static_cast<string *>(b.value);
 			char x = *static_cast<char *>(a.value);
-			return Item(static_cast<void *>(new string(s + x)), StringType);
+			return Item(static_cast<void *>(new string(s + x)), "String");
 		}
 	}
-	if (not contain(possibleOperations(a.type), op.source)) {
+	if (not contain(possibleOperations(toType(a.type)), op.source)) {
 		return Exception(OperandTypeError);
 	}
-	if (a.type == IntType and b.type == IntType) {
+	if (a.type == "Int" and b.type == "Int") {
 		int x = *static_cast<int *>(a.value), y = *static_cast<int *>(b.value);
 		if (op.source == "/" and x == 0) {
 			return Exception(ZeroDivisionError);
 		}
 		if (isComparisonOperation(op.source)) {
-			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), "Bool");
 		}
-		return Item(static_cast<void *>(new int(processOperation(x, y, op.source))), IntType);
+		return Item(static_cast<void *>(new int(processOperation(x, y, op.source))), "Int");
 	}
-	if (a.type == FloatType or b.type == FloatType) {
-		double x = (a.type == IntType ? *static_cast<int *>(a.value) : *static_cast<double *>(a.value)),
-			y = (b.type == IntType ? *static_cast<int *>(b.value) : *static_cast<double *>(b.value));
+	if (a.type == "Float" or b.type == "Float") {
+		double x = (a.type == "Int" ? *static_cast<int *>(a.value) : *static_cast<double *>(a.value)),
+			y = (b.type == "Int" ? *static_cast<int *>(b.value) : *static_cast<double *>(b.value));
 		if (op.source == "/" and x == 0) {
 			return Exception(ZeroDivisionError);
 		}
 		if (isComparisonOperation(op.source)) {
-			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), "Bool");
 		}
-		return Item(static_cast<void *>(new double(processOperation(x, y, op.source))), FloatType);
+		return Item(static_cast<void *>(new double(processOperation(x, y, op.source))), "Float");
 	}
-	if (a.type == BoolType) {
+	if (a.type == "Bool") {
 		bool x = *static_cast<bool *>(a.value), y = *static_cast<bool *>(b.value);
 		if (isComparisonOperation(op.source)) {
-			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), "Bool");
 		}
-		return Item(static_cast<void *>(new bool(processOperation(x, y, op.source))), BoolType);
+		return Item(static_cast<void *>(new bool(processOperation(x, y, op.source))), "Bool");
 	}
-	if (a.type == StringType) {
+	if (a.type == "String") {
 		string x = *static_cast<string *>(a.value), y = *static_cast<string *>(b.value);
 		if (isComparisonOperation(op.source)) {
-			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), "Bool");
 		}
-		return Item(static_cast<void *>(new string(processOperation(x, y, op.source))), StringType);
+		return Item(static_cast<void *>(new string(processOperation(x, y, op.source))), "String");
 	}
-	if (a.type == CharType) {
+	if (a.type == "Char") {
 		char x = *static_cast<char *>(a.value), y = *static_cast<char *>(b.value);
 		if (isComparisonOperation(op.source)) {
-			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), BoolType);
+			return Item(static_cast<void *>(new bool(compare(x, y, op.source))), "Bool");
 		}
-		return Item(static_cast<void *>(new char(processOperation(x, y, op.source))), CharType);
+		return Item(static_cast<void *>(new char(processOperation(x, y, op.source))), "Char");
 	}
 }
 
 ProcessReturned ProcessUnary(Item &a, Token op) {
-	if (not contain({IntType, FloatType, BoolType}, a.type)) {
+	if (not contain({"Int", "Float", "Bool"}, a.type)) {
 		return Exception(IncorrectOperationArguments);
 	}
-	if (not contain({"+", "-", "!"}, op.source)) {
+	if (not contain({"$+", "$-", "!"}, op.source)) {
 		return Exception(OperationArgumentExcess);
 	}
-	if (a.type == IntType) {
+	if (a.type == "Int") {
 		int x = *static_cast<int *>(a.value);
-		if (op.source == "-") x = -x;
+		if (op.source == "$-") x = -x;
 		if (op.source == "!") x = !x;
-		return Item(static_cast<void *>(new int(x)), IntType);
+		return Item(static_cast<void *>(new int(x)), "Int");
 	}
-	if (a.type == FloatType) {
+	if (a.type == "Float") {
 		double x = *static_cast<double *>(a.value);
-		if (op.source == "-") x = -x;
+		if (op.source == "$-") x = -x;
 		if (op.source == "!") x = !x;
-		return Item(static_cast<void *>(new double(x)), FloatType);
+		return Item(static_cast<void *>(new double(x)), "Float");
 	}
-	if (a.type == BoolType) {
+	if (a.type == "Bool") {
 		bool x = *static_cast<bool *>(a.value);
 		if (op.source != "!") {
 			return Exception(IncorrectOperationArguments);
 		}
-		return Item(static_cast<void *>(new bool(!x)), BoolType);
+		return Item(static_cast<void *>(new bool(!x)), "Bool");
 	}
 }
 
@@ -428,13 +477,13 @@ CalculateReturned Calculate(Expression expression) {
 	stack<Item> values;
 	// вычисление выражений
 	for (auto elem: postfixNotation) {
-		if (elem.type == OperationType) {
+		if (elem.type == "Operation") {
 			if (values.empty()) {
 				return Exception(RuntimeError);
 			}
 			Item a = values.top();
 			values.pop();
-			if (values.empty() or elem.source == "!") {
+			if (values.empty() or elem.token.isUnaryOperator()) {
 				auto processedUnary = ProcessUnary(a, elem.token);
 				if (processedUnary.exception.type != Nothing) {
 					return processedUnary.exception;

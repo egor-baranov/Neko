@@ -106,7 +106,7 @@ struct Token {
   }
 
   bool isUnaryOperator() {
-	  return contain({"+", "-", "!", "~"}, source);
+	  return contain({"$+", "$-", "!", "~"}, source);
   }
 
   bool isEndOfExpression() {
@@ -128,8 +128,10 @@ struct Token {
 
 bool isBuildInType(Token token) {
 	if (token.type != Name) return false;
-	if (BuiltInTypes.find(token.source) != BuiltInTypes.end()) return true;
-	return BuiltInClasses.find(token.source) != BuiltInClasses.end();
+	if (BuiltInTypes.find(token.source) != BuiltInTypes.end() or
+	    BuiltInClasses.find(token.source) != BuiltInClasses.end()) {
+		return true;
+	}
 }
 
 const Token endOfLine(EOL, "\n");
@@ -277,6 +279,9 @@ int getPriority(Token token) {
 	}
 	if (contain({"!"}, token.source)) {
 		return 13;
+	}
+	if (contain({"$-", "$+"}, token.source)) {
+		return 14;
 	}
 	return 1;
 }

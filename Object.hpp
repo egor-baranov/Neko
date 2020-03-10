@@ -11,23 +11,18 @@ class Object {
   }
 };
 
-enum IntValueType {
-
-};
 
 class Int : Object {
+  int value;
 
-  void toString() {
+  string toString() {
 
   }
-};
-
-enum FloatValueType {
 
 };
 
 class Float : Object {
-
+  double value;
 };
 
 class Char : Object {
@@ -35,10 +30,6 @@ class Char : Object {
 };
 
 class String : Object {
-
-};
-
-class Function : Object {
 
 };
 

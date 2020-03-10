@@ -7,6 +7,9 @@
 using namespace std;
 
 enum ExType {
+  BREAK, // служебные возвращаемые значения, показывающие, почему цикл был прерван или функция вернула значение
+  CONTINUE,
+  RETURN,
   OperationArgumentExcess,
   ConstAssignment, // присвоение значения константе
   OperandTypeError, // нет перегруженного оператора для выполнения операции, например 2 + "s"
@@ -234,7 +237,8 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
 
 		if (token.source == ":") {
 			if (i == 0) return Exception(SyntaxError, lineIndex);
-			if ((prevToken.type != Name or nextToken.type != Name) and prevToken.source != ")") {
+			if ((prevToken.type != Name or nextToken.type != Name) and prevToken.source != ")" and
+			    nextToken.source != "=") {
 				return Exception(SyntaxError, lineIndex);
 			}
 		}

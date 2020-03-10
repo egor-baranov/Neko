@@ -12,6 +12,8 @@ enum ConstructionType {
   InitializerList
 };
 
+// TODO: убрать скобки при if, elif, while
+
 string toString(ConstructionType input) {
 	switch (input) {
 		case Conditional:
@@ -74,47 +76,59 @@ Exception parseIfStatement(const vector<Token> &input, int &index) {
 	if (input[index].source != "if") {
 		return Exception(SyntaxError, getLineIndex(input, index));
 	}
-	index = nextIndex(input, index);
-	if (input[index].source != "(") {
-		return Exception(SyntaxError, getLineIndex(input, index));
-	}
-	index = nextIndex(input, index);
-	auto parseResult = parseExpression(input, index);
-	if (parseResult.exception.type != Nothing) {
-		return Exception(parseResult.exception.type, getLineIndex(input, index));
-	}
-	auto calculationResult = Calculate(parseResult.source);
-	if (calculationResult.exception.type != Nothing) {
-		return Exception(calculationResult.exception.type, getLineIndex(input, index));
-	}
-	Item item = calculationResult.item;
-	if (item.type != BoolType) {
-		return Exception(TypeError, getLineIndex(input, index));
-	}
-	bool logicValue = *static_cast<bool *>(item.value);
-	vector<Token> ifBody;
-	index = nextIndex(input, index);
-	if (input[index].source != "{") {
-		return Exception(SyntaxError, getLineIndex(input, index));
-	}
-	index = nextIndex(input, index);
-	stack<string> bracketStack;
-	while (!(bracketStack.empty() and input[index].source == "}")) {
-		if (input[index].source == "{") {
-			bracketStack.push(input[index].source);
-		}
-		if (input[index].source == "}") {
-			bracketStack.pop();
-		}
-		if (logicValue) {
-			ifBody.push_back(input[index]);
+	bool used = false, logicValue;
+	do {
+		if (contain({"if", "elif"}, input[index].source) or
+		    (input[index].source == "else" and input[nextIndex(input, index)].source == "if")) {
+			if (input[index].source == "else" and input[nextIndex(input, index)].source == "if") {
+				index = nextIndex(input, index);
+			}
+			index = nextIndex(input, index);
+			if (input[index].source != "(") {
+				return Exception(SyntaxError, getLineIndex(input, index));
+			}
+			index = nextIndex(input, index);
+			auto parseResult = parseExpression(input, index);
+			if (parseResult.exception.type != Nothing) {
+				return Exception(parseResult.exception.type, getLineIndex(input, index));
+			}
+			auto calculationResult = Calculate(parseResult.source);
+			if (calculationResult.exception.type != Nothing) {
+				return Exception(calculationResult.exception.type, getLineIndex(input, index));
+			}
+			Item item = calculationResult.item;
+			if (item.type != "Bool") {
+				return Exception(TypeError, getLineIndex(input, index));
+			}
+			logicValue = *static_cast<bool *>(item.value);
+		} else logicValue = true;
+		vector<Token> ifBody;
+		index = nextIndex(input, index);
+		if (input[index].source != "{") {
+			return Exception(SyntaxError, getLineIndex(input, index));
 		}
 		index = nextIndex(input, index);
-	}
-	index = nextIndex(input, index);
-	if (logicValue) {
-		return execute(ifBody);
-	}
+		stack<string> bracketStack;
+		while (not(bracketStack.empty() and input[index].source == "}")) {
+			if (input[index].source == "{") {
+				bracketStack.push(input[index].source);
+			}
+			if (input[index].source == "}") {
+				bracketStack.pop();
+			}
+			if (logicValue and not used) {
+				ifBody.push_back(input[index]);
+			}
+			index = nextIndex(input, index);
+		}
+		index = nextIndex(input, index);
+		if (logicValue and not used) {
+			Exception exception = execute(ifBody);
+			if (exception.type != Nothing) return exception;
+			used = true;
+		}
+	} while (contain({"else", "elif"}, input[index].source));
+
 	return Exception(Nothing);
 }
 
@@ -138,7 +152,7 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 		return Exception(calculationResult.exception.type, getLineIndex(input, index));
 	}
 	Item item = calculationResult.item;
-	if (item.type != BoolType) {
+	if (item.type != "Bool") {
 		return Exception(TypeError, getLineIndex(input, index));
 	}
 	bool logicValue = *static_cast<bool *>(item.value);
@@ -162,16 +176,35 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 		index = nextIndex(input, index);
 	}
 	index = nextIndex(input, index);
+	const int endIndex = index;
 	while (logicValue) {
 		Exception exception = execute(whileBody);
-		if (exception.type != Nothing) {
+		if (not contain({Nothing, CONTINUE}, exception.type)) {
+			if (exception.type == BREAK) break;
 			return exception;
 		}
 		// TODO: чекаем calculate от этой самой последовательности и тд
 		index = conditionIndex;
 		logicValue = *static_cast<bool *>(Calculate(parseExpression(input, index).source).item.value);
 	}
+	index = endIndex;
 	return Nothing;
+}
+
+// TODO: add parseForStatement
+Exception parseForStatement(const vector<Token> &input, int &index) {
+	if (input[index].source != "for") {
+		return Exception(SyntaxError, getLineIndex(input, index));
+	}
+	index = nextIndex(input, index);
+	if (input[index].source != "(") {
+		return Exception(SyntaxError, getLineIndex(input, index));
+	}
+	index = nextIndex(input, index);
+	if (input[index].type != Name) {
+		return Exception(SyntaxError, getLineIndex(input, index));
+	}
+
 }
 
 #endif //NEKO_INTERPRETER_CONSTRUCTIONS_HPP

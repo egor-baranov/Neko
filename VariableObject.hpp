@@ -54,13 +54,19 @@ VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, i
 		return Exception(calculateReturned.exception.type, getLineIndex(input, index));
 	}
 	if (assignmentOperator.source == "=") {
+		if (Variables[name].type != "Any" and Variables[name].type != calculateReturned.item.type) {
+			return Exception(TypeError, getLineIndex(input, index));
+		}
 		Variables[name].item = calculateReturned.item;
 	} else {
 		string s = assignmentOperator.source;
-		auto processed = Process(Variables[name].item, calculateReturned.item,
+		auto processed = Process(calculateReturned.item, Variables[name].item,
 		                         getToken(sliceString(s, 0, s.size() - 2)));
 		if (processed.exception.type != Nothing) {
 			return Exception(processed.exception.type, getLineIndex(input, index));
+		}
+		if (Variables[name].type != "Any" and Variables[name].type != processed.item.type) {
+			return Exception(TypeError, getLineIndex(input, index));
 		}
 		Variables[name].item = processed.item;
 	}
@@ -81,7 +87,7 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 	}
 	variable.name = input[index].source;
 	index = nextIndex(input, index);
-	if (not contain({"=", ":"}, input[index].source)) {
+	if (not contain({"=", ":=", ":"}, input[index].source)) {
 		return Exception(VariableDeclarationError, getLineIndex(input, index));
 	}
 	if (input[index].source == ":") {
@@ -92,10 +98,10 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 		if (not isBuildInType(input[index]) and not isDeclaredClass(input[index])) {
 			return Exception(UnknownTypeError, getLineIndex(input, index));
 		}
-		variable.typeName = input[index].source;
+		variable.type = input[index].source;
 		index = nextIndex(input, index);
 	}
-	if (input[index].source != "=") {
+	if (not contain({"=", ":="}, input[index].source)) {
 		return Exception(VariableDeclarationError, getLineIndex(input, index));
 	}
 	index = nextIndex(input, index);
@@ -106,6 +112,9 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 	CalculateReturned calculateReturned = Calculate(result.source);
 	if (calculateReturned.exception.type != Nothing) {
 		return Exception(calculateReturned.exception.type, getLineIndex(input, index));
+	}
+	if (variable.type != "Any" and variable.type != calculateReturned.item.type) {
+		return Exception(TypeError, getLineIndex(input, index));
 	}
 	variable.item = calculateReturned.item;
 	Variables[variable.name] = variable;

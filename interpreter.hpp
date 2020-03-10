@@ -23,9 +23,11 @@ vector<Token> parse(vector<Token> input) {
 				string s = input[i + 2].source;
 				if (not isCorrectName(s) and canBeDivided(s)) {
 					pair<string, string> divided = divide(s);
+					output.push_back(getToken("("));
 					output.push_back(getToken(token.source + "." + divided.first));
 					output.push_back(getToken("*"));
 					output.push_back(getToken(divided.second));
+					output.push_back(getToken(")"));
 					i += 2;
 					continue;
 				}
@@ -33,9 +35,11 @@ vector<Token> parse(vector<Token> input) {
 		}
 		if (token.type == Name and not isCorrectName(token.source) and canBeDivided(token.source)) {
 			pair<string, string> divided = divide(token.source);
+			output.push_back(getToken("("));
 			output.push_back(getToken(divided.first));
 			output.push_back(getToken("*"));
 			output.push_back(getToken(divided.second));
+			output.push_back(getToken(")"));
 			continue;
 		}
 		if (contain({"<", "=", "!"}, token.source) and input[i + 1].source == "=") {
@@ -88,7 +92,7 @@ vector<Token> parse(vector<Token> input) {
 			} else output.push_back(Token(ComparisonOperator, "<"));
 			continue;
 		}
-		if (contain({"+", "-", "*", "**", "^", "&", "|", "/", "%"}, token.source) and input[i + 1].source == "=") {
+		if (contain({"+", "-", "*", "**", "^", "&", "|", "/", "%", ":"}, token.source) and input[i + 1].source == "=") {
 			output.push_back(Token(AssignmentOperator, token.source + "="));
 			++i;
 			continue;
@@ -110,12 +114,22 @@ vector<Token> parse(vector<Token> input) {
 				continue;
 			}
 		}
+		if (contain({"+", "-"}, token.source)) {
+			if (i == 0) {
+				token = getToken("$" + token.source);
+			} else {
+				if (not input[i - 1].isRightBracket() and not input[i - 1].isObject()) {
+					token = getToken("$" + token.source);
+				}
+			}
+		}
 		if (not output.empty())
-			if (contain({"+", "-"}, output.back().source) and contain({"+", "-"}, token.source)) {
+			if (contain({"+", "-", "$+", "$-"}, output.back().source) and
+			    contain({"+", "-", "$+", "$-"}, token.source)) {
 				if (token.source == output.back().source) {
-					output.back().source = "+";
+					output.back().source = (contain({token.source[0], output.back().source[0]}, '$') ? "$+" : "+");
 				} else {
-					output.back().source = "-";
+					output.back().source = (contain({token.source[0], output.back().source[0]}, '$') ? "$-" : "-");
 				}
 				continue;
 			}

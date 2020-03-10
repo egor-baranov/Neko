@@ -20,11 +20,13 @@ set<string> BuiltInTypes{
 };
 
 set<string> BuiltInClasses{
-	"Object",
+	"Object", "NoneType",
 	"Bool",
 	"String", "Char",
+	"Unit",
 	"Number", "Int", "Float", "Complex", "MathNum", "BigInt", "BigFloat", "BigComplex",
-	"Container", "Array", "List", "Set", "Map"
+	"Container", "Array", "List", "Set", "Map",
+	"Any"
 };
 
 set<string> Keywords{
@@ -38,7 +40,7 @@ set<string> Keywords{
 	"static", "sealed", "abstract",
 	"from", "import",
 	"thread", "ref",
-	"until", "downTo"
+	"until", "downTo", "step"
 };
 
 set<string> Constants{
@@ -59,8 +61,9 @@ set<string> Operators{
 	"++", "--",
 	"<<", ">>", "!", "=", "<<<", ">>>",
 	"^", "~",
-	"+=", "-=", "*=", "**=", "^=", "&=", "|=", "/=", "%=",
-	"and", "or", "not", "xor"
+	"+=", "-=", "*=", "**=", "^=", "&=", "|=", "/=", "%=", ":=",
+	"and", "or", "not", "xor",
+	"$+", "$-" // унарные + и -
 };
 
 set<string> Punctuations{

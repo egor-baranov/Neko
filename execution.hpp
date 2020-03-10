@@ -9,6 +9,11 @@
 
 Exception parseIfStatement(const vector<Token> &input, int &index);
 
+Exception formatException(Exception e, int lineIndex) {
+	if (e.line != -1) return e;
+	return Exception(e.type, lineIndex);
+}
+
 // TODO: FIX short expression
 Exception execute(vector<Token> input) {
 	int index = 0;
@@ -24,44 +29,73 @@ Exception execute(vector<Token> input) {
 			continue;
 		}
 		if (contain({"val", "var"}, token.source) or
-		    (token.type == Name and nameDeclaration(token.source) == Undeclared and nextToken.source == "=")) {
+		    (token.type == Name and contain({":=", ":"}, nextToken.source) or
+		                            (token.type == Name and nameDeclaration(token.source) == Undeclared and
+		                             nextToken.source == "="))) {
 			Exception exception = parseVariableDeclaration(input, index);
-			if (exception.type == Nothing) continue;
-			return Exception(exception.type, getLineIndex(input, index));
+			if (exception.type == Nothing) {
+				continue;
+			}
+			return formatException(exception, getLineIndex(input, index));
 		}
 		if (token.source == "fun") {
 			Exception exception = parseFunctionDeclaration(input, index);
-			if (exception.type == Nothing) continue;
-			return Exception(exception.type, getLineIndex(input, index));
+			if (exception.type == Nothing) {
+				continue;
+			}
+			return formatException(exception, getLineIndex(input, index));
 		}
 		if (token.source == "class") {
 			Exception exception = parseClassDeclaration(input, index);
-			if (exception.type == Nothing) continue;
-			return Exception(exception.type, getLineIndex(input, index));
+			if (exception.type == Nothing) {
+				continue;
+			}
+			return formatException(exception, getLineIndex(input, index));
 		}
+
+		// TODO: assignment using := in scopes
 		if (nameDeclaration(token.source) == DeclaredVariable and nextToken.type == AssignmentOperator) {
-			Exception exception = parseVariableAssignment(input, index).exception;
-			if (exception.type == Nothing) continue;
-			return Exception(exception.type, getLineIndex(input, index));
+			Exception exception = (nextToken.source == ":=" ? parseVariableDeclaration(input, index) :
+			                       parseVariableAssignment(input, index).exception);
+			if (exception.type == Nothing) {
+				continue;
+			}
+			return formatException(exception, getLineIndex(input, index));
 		}
 		if (nameDeclaration(token.source) == DeclaredFunction) {
 			Exception exception = parseFunctionCall(input, index).exception;
-			if (exception.type == Nothing) continue;
-			return Exception(exception.type, getLineIndex(input, index));
+			if (exception.type == Nothing) {
+				continue;
+			}
+			return formatException(exception, getLineIndex(input, index));
 		}
 		if (token.source == "if") {
 			Exception exception = parseIfStatement(input, index);
-			if (exception.type == Nothing) continue;
-			return Exception(exception.type, getLineIndex(input, index));
+			if (exception.type == Nothing) {
+				continue;
+			}
+			return formatException(exception, getLineIndex(input, index));
 		}
 		if (token.source == "while") {
 			Exception exception = parseWhileStatement(input, index);
-			if (exception.type == Nothing) continue;
-			return Exception(exception.type, getLineIndex(input, index));
+			if (exception.type == Nothing) {
+				continue;
+			}
+			return formatException(exception, getLineIndex(input, index));
+		}
+		if (token.source == "break") {
+			return BREAK;
+		}
+		if (token.source == "continue") {
+			return CONTINUE;
+		}
+		// TODO: return в возвращаемым значением
+		if (token.source == "return") {
+			return RETURN;
 		}
 		auto returnedExpression = parseExpression(input, index);
 		if (returnedExpression.exception.type != Nothing) {
-			return Exception(returnedExpression.exception.type, getLineIndex(input, index));
+			return formatException(returnedExpression.exception, getLineIndex(input, index));
 		}
 		// execute(returnedExpression.source);
 	}
