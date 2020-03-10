@@ -122,6 +122,89 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 	if (functionName == "readBool") {
 		return readBool(input);
 	}
+	if (contain(
+		{"abs", "sqr", "sqrt",
+		 "sin", "cos", "tg", "tan", "ctg", "ctan",
+		 "asin", "acos", "atan", "atan2",
+		 "log2", "log10", "ln", "lg"}, functionName)) {
+		if (input.size() == 0) {
+			return Exception(FunctionArgumentLack);
+		} else if (input.size() > 1) return Exception(FunctionArgumentExcess);
+		if (not input[0].isNumber()) {
+			return Exception(TypeError);
+		}
+		double x = (input[0].type == "Int" ? *static_cast<int *>(input[0].value)
+		                                   : *static_cast<double *>(input[0].value));
+		if (functionName == "abs") {
+			x = abs(x);
+			if (input[0].type == "Int") {
+				return Item(static_cast<void *>(new int((int) x)), "Int");
+			}
+		}
+		if (functionName == "sqr") {
+			x = x * x;
+		}
+		if (functionName == "sqrt") {
+			x = sqrt(x);
+		}
+		if (functionName == "sin") {
+			x = sin(x);
+		}
+		if (functionName == "cos") {
+			x = cos(x);
+		}
+		if (contain({"tg", "tan"}, functionName)) {
+			if (cos(x) == 0) return Exception(MathError);
+			x = tan(x);
+		}
+		if (contain({"ctg", "ctan"}, functionName)) {
+			if (cos(x) == 0) return Exception(MathError);
+			x = 1 / tan(x);
+		}
+		if (contain({"log", "ln"}, functionName)) {
+			if (x <= 0) return Exception(MathError);
+			x = log(x);
+		}
+		if (functionName == "log2") {
+			if (x <= 0) return Exception(MathError);
+			x = log2(x);
+		}
+		if (contain({"log10", "lg"}, functionName)) {
+			if (x <= 0) return Exception(MathError);
+			x = log10(x);
+		}
+		return Item(static_cast<void *>(new double(x)), "Float");
+	}
+	if (functionName == "log") {
+		if (input.size() == 0) {
+			return Exception(FunctionArgumentLack);
+		} else if (input.size() > 2) {
+			return Exception(FunctionArgumentExcess);
+		}
+		if (input.size() == 1) {
+			if (input[0].isNotNumber()) {
+				return Exception(TypeError);
+			}
+			double x = (input[0].type == "Int" ? *static_cast<int *>(input[0].value)
+			                                   : *static_cast<double *>(input[0].value));
+			if (x <= 0) {
+				return Exception(MathError);
+			}
+			return Item(static_cast<void *>(new double(log(x))), "Float");
+		} else {
+			if (input[0].isNotNumber() or input[1].isNotNumber()) {
+				return Exception(TypeError);
+			}
+			double x = (input[0].type == "Int" ? *static_cast<int *>(input[0].value)
+			                                   : *static_cast<double *>(input[0].value)),
+				y = (input[0].type == "Int" ? *static_cast<int *>(input[1].value)
+				                            : *static_cast<double *>(input[1].value));
+			if (x <= 0 or y <= 0 or x == 1) {
+				return Exception(MathError);
+			}
+			return Item(static_cast<void *>(new double(log(y) / log(x))), "Float");
+		}
+	}
 }
 
 #endif //NEKO_INTERPRETER_NEKOLIB_HPP

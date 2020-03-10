@@ -108,6 +108,10 @@ struct Item {
 	  return contain({"Float", "Int"}, type);
   }
 
+  bool isNotNumber() {
+	  return not isNumber();
+  }
+
   Item(Token init) {
 	  token = init;
 	  type = getType(init);
@@ -218,7 +222,10 @@ struct Function : Object {
 set<string> BuiltInFunctions{
 	"print", "println",
 	"readLine", "readInt", "readFloat", "readChar", "readString", "readBool",
-	"sin", "cos", "tg", "ctg"
+	"abs", "sqr", "sqrt",
+	"sin", "cos", "tg", "tan", "ctg", "ctan",
+	"asin", "acos", "atan", "atan2",
+	"log", "log2", "log10", "ln", "lg"
 };
 
 struct ClassObject {
