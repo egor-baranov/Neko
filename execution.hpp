@@ -14,8 +14,7 @@ Exception formatException(Exception e, int lineIndex) {
 	return Exception(e.type, lineIndex);
 }
 
-// TODO: FIX short expression
-Exception execute(vector<Token> input) {
+Exception executeScope(vector<Token> input) {
 	int index = 0;
 	if (input.back().type != EOfF) {
 		input.push_back(endOfFile);
@@ -54,7 +53,7 @@ Exception execute(vector<Token> input) {
 		}
 
 		// TODO: assignment using := in scopes
-		if (nameDeclaration(token.source) == DeclaredVariable and nextToken.type == AssignmentOperator) {
+		if (nameDeclaration(token.source) != Undeclared and nextToken.type == AssignmentOperator) {
 			Exception exception = (nextToken.source == ":=" ? parseVariableDeclaration(input, index) :
 			                       parseVariableAssignment(input, index).exception);
 			if (exception.type == Nothing) {
@@ -99,6 +98,16 @@ Exception execute(vector<Token> input) {
 		}
 		// execute(returnedExpression.source);
 	}
+	return Nothing;
+}
+
+Exception execute(vector<Token> input) {
+	scopeManager.addScope();
+	Exception ret = executeScope(input);
+	if (ret.type != Nothing) {
+		return ret;
+	}
+	scopeManager.deleteLastScope();
 	return Nothing;
 }
 

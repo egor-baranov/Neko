@@ -13,6 +13,7 @@ enum Type {
   NoneType,
   OperationType,
   UndefinedType,
+  FunctionType
 };
 
 string toString(Type t) {
@@ -33,6 +34,8 @@ string toString(Type t) {
 			return "Operation";
 		case UndefinedType:
 			break;
+		case FunctionType:
+			return "Function";
 	}
 }
 
@@ -57,6 +60,9 @@ Type toType(string s) {
 	}
 	if (s == "Operation") {
 		return OperationType;
+	}
+	if (s == "Function") {
+		return FunctionType;
 	}
 }
 
@@ -88,6 +94,8 @@ vector<string> possibleOperations(Type argType) {
 		case UndefinedType: {
 			return {};
 		}
+		case FunctionType:
+			break;
 	}
 }
 

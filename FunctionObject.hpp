@@ -109,14 +109,22 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 		}
 		index = nextIndex(input, index);
 	}
-	Functions[functionObject.name] = functionObject;
+	VariableObject newFunction;
+	newFunction.isMutable = true;
+	newFunction.type = "Function";
+	newFunction.name = functionObject.name;
+	newFunction.item = Item(static_cast<void *>(new Function(functionObject)), "Function");
+	scopeManager.addVariable(newFunction);
 	return Exception(Nothing);
 }
 
 FunctionReturned call(string functionName, vector<Item> &args, int functionCallIndex) {
-	if (Functions.find(functionName) != Functions.end()) {
-		return Functions[functionName].runWithArgs(args);
-	} else if (BuiltInFunctions.find(functionName) != BuiltInFunctions.end()) {
+	if (scopeManager.find(functionName)) {
+		if (scopeManager.get(functionName).type == "Function") {
+			return runWithArgs(scopeManager.getFunction(functionName), args);
+		}
+	}
+	if (BuiltInFunctions.find(functionName) != BuiltInFunctions.end()) {
 		return callBuiltInFunction(functionName, args);
 	} else {
 		return Exception(UndefinedNameUsage, functionCallIndex);

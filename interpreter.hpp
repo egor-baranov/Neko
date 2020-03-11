@@ -210,8 +210,8 @@ void open(string url) {
 		throwException(semanticException);
 		return;
 	}
-	cout << format(res, true) << endl;
-	cout << format(res, false) << endl;
+	// cout << format(res, true) << endl;
+	// cout << format(res, false) << endl;
 	Exception executionException = execute(res);
 	if (executionException.type != Nothing) {
 		throwException(executionException);

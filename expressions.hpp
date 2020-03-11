@@ -59,8 +59,26 @@ void *getValue(const string &type, const Token token) {
 		case UndefinedType: {
 			break;
 		}
+		case FunctionType:
+			break;
 	}
 }
+
+struct FunctionArgument {
+  bool ref = false;
+  string name = "";
+  string type = "Any";
+};
+
+struct Function {
+  bool isLambda = false;
+  string name = "";
+  string type = "Any";
+  int startIndex = -1000;
+  vector<Token> representation;
+  vector<FunctionArgument> args;
+};
+
 
 struct Item {
   public:
@@ -100,6 +118,10 @@ struct Item {
 				  break;
 			  case UndefinedType:
 				  break;
+			  case FunctionType: {
+				  Function tmpFunction = *static_cast<Function *>(value);
+				  break;
+			  }
 		  }
 	  }
   }
@@ -164,10 +186,13 @@ struct Item {
 			  return "None";
 		  }
 		  case OperationType:
-			  break;
+			  return "OperationObject";
 		  case UndefinedType:
-			  break;
+			  return "UndefinedObject";
+		  case FunctionType:
+			  return "FunctionObject";
 	  }
+	  assert(false);
   }
 };
 
@@ -185,43 +210,28 @@ struct VariableObject {
   Item item = Item(emptyToken);
 };
 
-struct FunctionArgument {
-  bool ref = false;
-  string name = "";
-  string type = "Any";
-};
+Exception runWithArgs(Function function, vector<Item> variables) {
+	if (variables.size() < function.args.size()) {
+		return Exception(FunctionArgumentLack, function.startIndex);
+	}
 
-struct Function : Object {
-  bool isLambda = false;
-  string name = "";
-  string type = "Any";
-  int startIndex = -1000;
-  vector<Token> representation;
-  vector<FunctionArgument> args;
+	if (variables.size() > function.args.size()) {
+		return Exception(FunctionArgumentExcess, function.startIndex);
+	}
 
-  Exception runWithArgs(vector<Item> variables) {
-	  if (variables.size() < args.size()) {
-		  return Exception(FunctionArgumentLack, startIndex);
-	  }
+	for (int i = 0; i < function.args.size(); ++i) {
+		if (function.args[i].type == variables[i].type or function.args[i].type == "Any") {
+			continue;
+		}
+		return TypeError;
+	}
 
-	  if (variables.size() > args.size()) {
-		  return Exception(FunctionArgumentExcess, startIndex);
-	  }
-
-	  for (int i = 0; i < args.size(); ++i) {
-		  if (args[i].type == variables[i].type or args[i].type == "Any") {
-			  continue;
-		  }
-		  return TypeError;
-	  }
-
-	  Exception exception = execute(representation);
-	  if (exception.type != Nothing) {
-		  return Exception(exception.type, exception.line + startIndex);
-	  }
-	  return Nothing;
-  }
-};
+	Exception exception = execute(function.representation);
+	if (exception.type != Nothing) {
+		return Exception(exception.type, exception.line + function.startIndex);
+	}
+	return Nothing;
+}
 
 set<string> BuiltInFunctions{
 	"print", "println",
@@ -255,9 +265,62 @@ FunctionReturned parseFunctionCall(const vector<Token> &input, int &index);
 
 const FunctionReturned VoidResult = {Item(getToken("")), Nothing, true};
 
-map<string, VariableObject> Variables;
-map<string, Function> Functions;
+//map<string, VariableObject> Variables;
+//map<string, Function> Functions;
 map<string, ClassObject> Classes;
+
+// TODO: определить методы
+struct ScopeManager {
+  public:
+  vector<map<string, VariableObject>> m;
+
+  void addScope() {
+	  m.push_back(map<string, VariableObject>());
+  }
+
+  void addVariable(VariableObject v) {
+	  m.back()[v.name] = v;
+  }
+
+  VariableObject get(string name) {
+	  for (int i = m.size() - 1; i >= 0; --i) {
+		  if (m[i].find(name) != m[i].end()) {
+			  return m[i][name];
+		  }
+	  }
+	  assert(false);
+  }
+
+  void setItem(string name, Item item) {
+	  for (int i = m.size() - 1; i >= 0; --i) {
+		  if (m[i].find(name) != m[i].end()) {
+			  m[i][name].item = item;
+			  return;
+		  }
+	  }
+	  assert(false);
+  }
+
+  Function getFunction(string name) {
+	  VariableObject obj = get(name);
+	  return *static_cast<Function * >(obj.item.value);
+  }
+
+  bool find(string name) {
+	  for (int i = m.size() - 1; i >= 0; --i) {
+		  if (m[i].find(name) != m[i].end()) {
+			  return true;
+		  }
+	  }
+	  return false;
+  }
+
+  void deleteLastScope() {
+	  m.pop_back();
+  }
+};
+
+ScopeManager scopeManager;
 
 enum nameType {
   DeclaredVariable,
@@ -267,11 +330,15 @@ enum nameType {
 };
 
 nameType nameDeclaration(string name) {
-	if (Variables.find(name) != Variables.end()) {
-		return DeclaredVariable;
-	}
-	if (Functions.find(name) != Functions.end() or BuiltInFunctions.find(name) != BuiltInFunctions.end()) {
+	if (BuiltInFunctions.find(name) != BuiltInFunctions.end()) {
 		return DeclaredFunction;
+	}
+	if (scopeManager.find(name)) {
+		VariableObject obj = scopeManager.get(name);
+		if (obj.type == "Function") {
+			return DeclaredFunction;
+		}
+		return DeclaredVariable;
 	}
 	if (Classes.find(name) != Classes.end()) {
 		return DeclaredClass;
@@ -360,7 +427,7 @@ bool possibleToProcess(Item &a, Item &b, Token op) {
 }
 
 // применение оператора к двум операндам
-ProcessReturned Process(Item &a, Item &b, Token op) {
+ProcessReturned Process(Item a, Item b, Token op) {
 	if (a.type != b.type and not(isNumber(a) and isNumber(b)) and not possibleToProcess(a, b, op)) {
 		return Exception(TypeError);
 	}
@@ -478,10 +545,10 @@ CalculateReturned Calculate(Expression expression) {
 	if (expression.content.size() == 1) {
 		Item ret = expression.content[0];
 		if (ret.token.type == Name) {
-			if (Variables.find(ret.token.source) == Variables.end()) {
+			if (scopeManager.find(ret.token.source)) {
 				return Exception(UndefinedNameUsage);
 			}
-			return Variables[ret.token.source].item;
+			return scopeManager.get(ret.token.source).item;
 		}
 		return ret;
 	}
@@ -592,7 +659,7 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 					ret.content.push_back(result.item);
 					continue;
 				}
-				ret.content.push_back(Variables[token.source].item);
+				ret.content.push_back(scopeManager.get(token.source).item);
 				index = nextIndex(input, index);
 				continue;
 			}

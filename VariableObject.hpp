@@ -33,10 +33,10 @@ VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, i
 		return Exception(VariableAssignmentError, getLineIndex(input, index));
 	}
 	string name = input[index].source;
-	if (nameDeclaration(name) != DeclaredVariable) {
+	if (nameDeclaration(name) == Undeclared) {
 		return Exception(VariableAssignmentError, getLineIndex(input, index));
 	}
-	if (not Variables[name].isMutable) {
+	if (not scopeManager.get(name).isMutable) {
 		return Exception(ConstAssignment, getLineIndex(input, index));
 	}
 	index = nextIndex(input, index);
@@ -54,23 +54,24 @@ VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, i
 		return Exception(calculateReturned.exception.type, getLineIndex(input, index));
 	}
 	if (assignmentOperator.source == "=") {
-		if (Variables[name].type != "Any" and Variables[name].type != calculateReturned.item.type) {
+		if (not contain({"Any", calculateReturned.item.type}, scopeManager.get(name).type)) {
 			return Exception(TypeError, getLineIndex(input, index));
 		}
-		Variables[name].item = calculateReturned.item;
+		scopeManager.setItem(name, calculateReturned.item);
 	} else {
 		string s = assignmentOperator.source;
-		auto processed = Process(calculateReturned.item, Variables[name].item,
+		auto processed = Process(calculateReturned.item, scopeManager.get(name).item,
 		                         getToken(sliceString(s, 0, s.size() - 2)));
 		if (processed.exception.type != Nothing) {
 			return Exception(processed.exception.type, getLineIndex(input, index));
 		}
-		if (Variables[name].type != "Any" and Variables[name].type != processed.item.type) {
+		if (not contain({"Any", processed.item.type}, scopeManager.get(name).type)) {
 			return Exception(TypeError, getLineIndex(input, index));
 		}
-		Variables[name].item = processed.item;
+		// TODO: возможны ошибки
+		scopeManager.setItem(name, processed.item);
 	}
-	return Variables[name].item;
+	return scopeManager.get(name).item;
 }
 
 Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
@@ -117,7 +118,7 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 		return Exception(TypeError, getLineIndex(input, index));
 	}
 	variable.item = calculateReturned.item;
-	Variables[variable.name] = variable;
+	scopeManager.addVariable(variable);
 	return Exception(Nothing);
 }
 

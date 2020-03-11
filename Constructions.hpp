@@ -58,19 +58,7 @@ struct InitializerListConstruction : BasicConstruction {
   }
 };
 
-struct Scope {
-  int scopeId;
-  // {ConditionalConstruction, WhileConstruction, ForConstruction, Expression} которые наследуются от BasicConstruction
-  vector<BasicConstruction *> content;
-
-  Scope() {
-	  scopeId = std::rand();
-  }
-
-  void closeScope() {
-
-  }
-};
+// TODO: a = if (True) 3 else 4 (это надо в expressions.hpp добавить)
 
 Exception parseIfStatement(const vector<Token> &input, int &index) {
 	if (input[index].source != "if") {
