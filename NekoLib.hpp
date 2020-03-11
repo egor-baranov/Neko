@@ -125,8 +125,10 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 	if (contain(
 		{"abs", "sqr", "sqrt",
 		 "sin", "cos", "tg", "tan", "ctg", "ctan",
-		 "asin", "acos", "atan", "atan2",
-		 "log2", "log10", "ln", "lg"}, functionName)) {
+		 "asin", "acos", "atan",
+		 "log2", "log10", "ln", "lg",
+		 "rad2Deg", "deg2Rad", "ceil", "floor",
+		}, functionName)) {
 		if (input.size() == 0) {
 			return Exception(FunctionArgumentLack);
 		} else if (input.size() > 1) return Exception(FunctionArgumentExcess);
@@ -135,16 +137,19 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 		}
 		double x = (input[0].type == "Int" ? *static_cast<int *>(input[0].value)
 		                                   : *static_cast<double *>(input[0].value));
-		if (functionName == "abs") {
-			x = abs(x);
+		if (contain({"abs", "sqr"}, functionName)) {
+			if (functionName == "abs") {
+				x = abs(x);
+			}
+			if (functionName == "sqr") {
+				x = x * x;
+			}
 			if (input[0].type == "Int") {
 				return Item(static_cast<void *>(new int((int) x)), "Int");
 			}
 		}
-		if (functionName == "sqr") {
-			x = x * x;
-		}
 		if (functionName == "sqrt") {
+			if (x < 0) return Exception(MathError);
 			x = sqrt(x);
 		}
 		if (functionName == "sin") {
@@ -172,6 +177,18 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 		if (contain({"log10", "lg"}, functionName)) {
 			if (x <= 0) return Exception(MathError);
 			x = log10(x);
+		}
+		if (functionName == "rad2Deg") {
+			x = x / M_PI * 180;
+		}
+		if (functionName == "deg2Rad") {
+			x = x * M_PI / 180;
+		}
+		if (functionName == "ceil") {
+			x = ceil(x);
+		}
+		if (functionName == "floor") {
+			x = floor(x);
 		}
 		return Item(static_cast<void *>(new double(x)), "Float");
 	}
@@ -205,6 +222,55 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 			return Item(static_cast<void *>(new double(log(y) / log(x))), "Float");
 		}
 	}
+	if (functionName == "atan2") {
+		if (input.size() < 2) {
+			return Exception(FunctionArgumentLack);
+		} else if (input.size() > 2) {
+			return Exception(FunctionArgumentExcess);
+		}
+		if (input[0].isNotNumber() or input[1].isNotNumber()) {
+			return Exception(TypeError);
+		}
+		double x = (input[0].type == "Int" ? *static_cast<int *>(input[0].value)
+		                                   : *static_cast<double *>(input[0].value)),
+			y = (input[0].type == "Int" ? *static_cast<int *>(input[1].value)
+			                            : *static_cast<double *>(input[1].value));
+		return Item(static_cast<void *>(new double(atan2(x, y))), "Float");
+	}
+	if (contain({"max", "min"}, functionName)) {
+		if (input.size() == 0) {
+			return Exception(FunctionArgumentLack);
+		}
+		Item ret = input[0];
+		for (int i = 1; i < input.size(); ++i) {
+			auto returned = Process(ret, input[i], getToken(functionName == "max" ? ">" : "<"));
+			if (returned.exception.type != Nothing) {
+				return returned.exception;
+			}
+			if (returned.item.type != "Bool") {
+				return Exception(TypeError);
+			}
+			if (returned.item.source == "True") {
+				ret = input[i];
+			}
+		}
+		return ret;
+	}
+	if (contain({"sum", "mul"}, functionName)) {
+		if (input.size() == 0) {
+			return Exception(FunctionArgumentLack);
+		}
+		Item ret = input[0];
+		for (int i = 1; i < input.size(); ++i) {
+			auto returned = Process(input[i], ret, getToken(functionName == "sum" ? "+" : "*"));
+			if (returned.exception.type != Nothing) {
+				return returned.exception;
+			}
+			ret = returned.item;
+		}
+		return ret;
+	}
+	return Exception(UndefinedNameUsage);
 }
 
 #endif //NEKO_INTERPRETER_NEKOLIB_HPP

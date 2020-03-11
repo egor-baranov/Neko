@@ -7,17 +7,41 @@
 class Object {
   void *value;
 
+  void toBool() {
+
+  }
+
   void toString() {
+  }
+
+  void serialize() {
+
+  }
+
+  void call() {
+
+  }
+
+  void index() {
+
+  }
+
+  void contain(Object other) {
+
+  }
+
+  void slice() {
+
+  }
+
+  void iterate(){
+
   }
 };
 
 
 class Int : Object {
   int value;
-
-  string toString() {
-
-  }
 
 };
 

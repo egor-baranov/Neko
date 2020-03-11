@@ -136,7 +136,11 @@ struct Item {
 
   Item(void *v, string t) : value(v), type(t) {
 	  source = toString();
-	  token = getToken(source);
+	  if (t == "String") {
+		  token = Token(StringLiteral, source);
+	  } else if (t == "Char") {
+		  token = Token(CharLiteral, source);
+	  } else token = getToken(source);
   }
 
   string toString() {
@@ -225,7 +229,9 @@ set<string> BuiltInFunctions{
 	"abs", "sqr", "sqrt",
 	"sin", "cos", "tg", "tan", "ctg", "ctan",
 	"asin", "acos", "atan", "atan2",
-	"log", "log2", "log10", "ln", "lg"
+	"log", "log2", "log10", "ln", "lg",
+	"rad2Deg", "deg2Rad", "ceil", "floor",
+	"min", "max", "sum", "mul"
 };
 
 struct ClassObject {
@@ -536,8 +542,7 @@ struct ParseExpressionReturned {
   ParseExpressionReturned(Exception e) : exception(e) {}
 };
 
-
-// TODO: FIX
+// TODO: add method call
 ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) {
 	Token token = input[index];
 	int end = input.size() - 1;

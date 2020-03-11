@@ -141,7 +141,6 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 		return Exception(SyntaxError, getLineIndex(input, index));
 	}
 	index = nextIndex(input, index);
-	// TODO: сохранить как последовательность токенов, чтобы переиспользовать
 	const int conditionIndex = index;
 	auto parseResult = parseExpression(input, index);
 	if (parseResult.exception.type != Nothing) {
@@ -183,7 +182,6 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 			if (exception.type == BREAK) break;
 			return exception;
 		}
-		// TODO: чекаем calculate от этой самой последовательности и тд
 		index = conditionIndex;
 		logicValue = *static_cast<bool *>(Calculate(parseExpression(input, index).source).item.value);
 	}
