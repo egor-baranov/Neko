@@ -96,6 +96,7 @@ struct Exception {
 	  line = -1;
   }
 
+
   Exception(ExType eT, int l) : type(eT), line(l) {}
 };
 
