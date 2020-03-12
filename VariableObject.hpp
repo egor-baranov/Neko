@@ -68,7 +68,6 @@ VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, i
 		if (not contain({"Any", processed.item.type}, scopeManager.get(name).type)) {
 			return Exception(TypeError, getLineIndex(input, index));
 		}
-		// TODO: возможны ошибки
 		scopeManager.setItem(name, processed.item);
 	}
 	return scopeManager.get(name).item;
@@ -118,7 +117,10 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 		return Exception(TypeError, getLineIndex(input, index));
 	}
 	variable.item = calculateReturned.item;
-	scopeManager.addVariable(variable);
+	Exception exception = scopeManager.add(variable);
+	if (exception.type != Nothing) {
+		return exception;
+	}
 	return Exception(Nothing);
 }
 

@@ -52,7 +52,6 @@ Exception executeScope(vector<Token> input) {
 			return formatException(exception, getLineIndex(input, index));
 		}
 
-		// TODO: assignment using := in scopes
 		if (nameDeclaration(token.source) != Undeclared and nextToken.type == AssignmentOperator) {
 			Exception exception = (nextToken.source == ":=" ? parseVariableDeclaration(input, index) :
 			                       parseVariableAssignment(input, index).exception);
@@ -104,11 +103,21 @@ Exception executeScope(vector<Token> input) {
 Exception execute(vector<Token> input) {
 	scopeManager.addScope();
 	Exception ret = executeScope(input);
-	if (ret.type != Nothing) {
-		return ret;
-	}
 	scopeManager.deleteLastScope();
-	return Nothing;
+	return ret;
+}
+
+Exception execute(vector<Token> input, vector<VariableObject> init) {
+	scopeManager.addScope();
+	for (VariableObject v: init) {
+		Exception exception = scopeManager.add(v);
+		if (exception.type != Nothing) {
+			return exception;
+		}
+	}
+	Exception ret = executeScope(input);
+	scopeManager.deleteLastScope();
+	return ret;
 }
 
 Exception execute(Expression expression) {

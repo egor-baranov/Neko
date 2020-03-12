@@ -114,7 +114,10 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	newFunction.type = "Function";
 	newFunction.name = functionObject.name;
 	newFunction.item = Item(static_cast<void *>(new Function(functionObject)), "Function");
-	scopeManager.addVariable(newFunction);
+	Exception exception = scopeManager.add(newFunction);
+	if (exception.type != Nothing) {
+		return exception;
+	}
 	return Exception(Nothing);
 }
 

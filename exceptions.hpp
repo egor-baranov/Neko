@@ -10,6 +10,7 @@ enum ExType {
   BREAK, // служебные возвращаемые значения, показывающие, почему цикл был прерван или функция вернула значение
   CONTINUE,
   RETURN,
+  RedefinationError, // повторный declaration в том же скопе
   OperationArgumentExcess,
   ConstAssignment, // присвоение значения константе
   OperandTypeError, // нет перегруженного оператора для выполнения операции, например 2 + "s"
@@ -46,6 +47,7 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
+	{RedefinationError,           "RedefinationError"},
 	{OperationArgumentExcess,     "OperationArgumentExcess"},
 	{ConstAssignment,             "ConstAssignment"},
 	{OperandTypeError,            "OperandTypeError"},
@@ -97,12 +99,17 @@ struct Exception {
   Exception(ExType eT, int l) : type(eT), line(l) {}
 };
 
+// TODO: fix line index
 string errorMessage(Exception ex) {
-	return toString(ex.type) + " in line " + to_string(ex.line);
+	return toString(ex.type); // + " in line " + to_string(ex.line);
 }
 
 void throwException(Exception ex) {
-	cerr << errorMessage(ex) << endl;
+	if (ExTypeToString.find(ex.type) == ExTypeToString.end()) {
+		cerr << errorMessage(Exception(SyntaxError, ex.line));
+	} else {
+		cerr << errorMessage(ex) << endl;
+	}
 }
 
 Exception syntaxErrorAnalysis(vector<Token> input) {

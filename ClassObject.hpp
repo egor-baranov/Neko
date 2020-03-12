@@ -6,6 +6,8 @@
 #include "VariableObject.hpp"
 #include "FunctionObject.hpp"
 
+// TODO: добавить парсер вызова конструктора
+
 bool operator>(ClassObject a, ClassObject b) {
 	return a.name > b.name;
 }

@@ -70,7 +70,7 @@ struct FunctionArgument {
   string type = "Any";
 };
 
-struct Function {
+struct Function : Object {
   bool isLambda = false;
   string name = "";
   string type = "Any";
@@ -201,32 +201,50 @@ struct Expression {
   vector<Item> content;
 };
 
-Exception execute(vector<Token> input);
-
 struct VariableObject {
   bool isMutable = true;
   string name = "";
   string type = "Any";
   Item item = Item(emptyToken);
+
+  VariableObject() {
+
+  }
 };
 
-Exception runWithArgs(Function function, vector<Item> variables) {
-	if (variables.size() < function.args.size()) {
+
+Exception execute(vector<Token> input);
+
+Exception execute(vector<Token> input, vector<VariableObject> init);
+
+Exception runWithArgs(Function function, vector<Item> init) {
+	if (init.size() < function.args.size()) {
 		return Exception(FunctionArgumentLack, function.startIndex);
 	}
 
-	if (variables.size() > function.args.size()) {
+	if (init.size() > function.args.size()) {
 		return Exception(FunctionArgumentExcess, function.startIndex);
 	}
 
 	for (int i = 0; i < function.args.size(); ++i) {
-		if (function.args[i].type == variables[i].type or function.args[i].type == "Any") {
+		if (function.args[i].type == init[i].type or function.args[i].type == "Any") {
 			continue;
 		}
 		return TypeError;
 	}
 
-	Exception exception = execute(function.representation);
+	vector<VariableObject> variables;
+
+	for (int i = 0; i < function.args.size(); ++i) {
+		VariableObject v;
+		v.item = init[i];
+		v.type = function.args[i].type;
+		v.name = function.args[i].name;
+		variables.push_back(v);
+	}
+
+	// TODO: add args
+	Exception exception = execute(function.representation, variables);
 	if (exception.type != Nothing) {
 		return Exception(exception.type, exception.line + function.startIndex);
 	}
@@ -269,7 +287,6 @@ const FunctionReturned VoidResult = {Item(getToken("")), Nothing, true};
 //map<string, Function> Functions;
 map<string, ClassObject> Classes;
 
-// TODO: определить методы
 struct ScopeManager {
   public:
   vector<map<string, VariableObject>> m;
@@ -278,8 +295,12 @@ struct ScopeManager {
 	  m.push_back(map<string, VariableObject>());
   }
 
-  void addVariable(VariableObject v) {
+  Exception add(VariableObject v) {
+	  if (m.back().find(v.name) != m.back().end()) {
+		  return RedefinationError;
+	  }
 	  m.back()[v.name] = v;
+	  return Nothing;
   }
 
   VariableObject get(string name) {
@@ -351,7 +372,6 @@ bool isLeftAssociative(Item item) {
 	return item.source != "**";
 }
 
-// TODO: добавить унарные операции
 vector<Item> intoPostfixNotation(vector<Item> input) {
 	stack<Token> operations;
 	vector<Item> output;

@@ -311,6 +311,7 @@ string formatFloatNumber(string number) {
 }
 
 string multiply(string input, int count) {
+	assert(count >= 0);
 	string output;
 	for (int i = 0; i < count; ++i) {
 		output += input;
