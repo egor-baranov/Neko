@@ -731,7 +731,7 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 			if (nameDeclaration(token.source) == Undeclared) {
 				return Exception(UndefinedNameUsage, getLineIndex(input, index));
 			}
-			if (nameDeclaration(token.source) == DeclaredVariable and nextToken.source != ".") {
+			if (nameDeclaration(token.source) != Undeclared and nextToken.source != ".") {
 				if (nextToken.source == "=") {
 					auto result = parseVariableAssignment(input, index);
 					if (result.exception.type != Nothing) {
@@ -744,14 +744,14 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 				index = nextIndex(input, index);
 				continue;
 			}
-			if (nameDeclaration(token.source) == DeclaredFunction) {
-				FunctionReturned functionReturned = parseFunctionCall(input, index);
-				if (functionReturned.exception.type != Nothing) {
-					return functionReturned.exception;
-				}
-				ret.content.push_back(functionReturned.item);
-				continue;
-			}
+//			if (nameDeclaration(token.source) == DeclaredFunction) {
+//				FunctionReturned functionReturned = parseFunctionCall(input, index);
+//				if (functionReturned.exception.type != Nothing) {
+//					return functionReturned.exception;
+//				}
+//				ret.content.push_back(functionReturned.item);
+//				continue;
+//			}
 		}
 		// cout << "[" << token.source << "]" << endl;
 		ret.content.push_back(Item(token));
