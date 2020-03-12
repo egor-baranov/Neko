@@ -10,6 +10,7 @@ enum ExType {
   BREAK, // служебные возвращаемые значения, показывающие, почему цикл был прерван или функция вернула значение
   CONTINUE,
   RETURN,
+  CallError,
   RedefinationError, // повторный declaration в том же скопе
   OperationArgumentExcess,
   ConstAssignment, // присвоение значения константе
@@ -47,6 +48,7 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
+	{CallError, "CallError"},
 	{RedefinationError,           "RedefinationError"},
 	{OperationArgumentExcess,     "OperationArgumentExcess"},
 	{ConstAssignment,             "ConstAssignment"},

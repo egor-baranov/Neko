@@ -60,13 +60,14 @@ Exception executeScope(vector<Token> input) {
 			}
 			return formatException(exception, getLineIndex(input, index));
 		}
-		if (nameDeclaration(token.source) == DeclaredFunction) {
-			Exception exception = parseFunctionCall(input, index).exception;
-			if (exception.type == Nothing) {
-				continue;
-			}
-			return formatException(exception, getLineIndex(input, index));
-		}
+		// TODO: перенести в parseExpression
+//		if (nameDeclaration(token.source) == DeclaredFunction) {
+//			Exception exception = parseFunctionCall(input, index).exception;
+//			if (exception.type == Nothing) {
+//				continue;
+//			}
+//			return formatException(exception, getLineIndex(input, index));
+//		}
 		if (token.source == "if") {
 			Exception exception = parseIfStatement(input, index);
 			if (exception.type == Nothing) {

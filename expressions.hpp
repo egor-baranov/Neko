@@ -562,16 +562,16 @@ struct CalculateReturned {
 };
 
 CalculateReturned Calculate(Expression expression) {
-	if (expression.content.size() == 1) {
-		Item ret = expression.content[0];
-		if (ret.token.type == Name) {
-			if (scopeManager.find(ret.token.source)) {
-				return Exception(UndefinedNameUsage);
-			}
-			return scopeManager.get(ret.token.source).item;
-		}
-		return ret;
-	}
+//	if (expression.content.size() == 1) {
+//		Item ret = expression.content[0];
+//		if (ret.token.type == Name) {
+//			if (scopeManager.find(ret.token.source)) {
+//				return Exception(UndefinedNameUsage);
+//			}
+//			return scopeManager.get(ret.token.source).item;
+//		}
+//		return ret;
+//	}
 
 	vector<Item> postfixNotation = intoPostfixNotation(expression.content);
 	stack<Item> values;
@@ -601,6 +601,9 @@ CalculateReturned Calculate(Expression expression) {
 		} else {
 			values.push(elem);
 		}
+	}
+	if (values.size() != 1) {
+		return Exception(RuntimeError);
 	}
 	return values.top();
 }
@@ -648,10 +651,14 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 		}
 		if (index != 0) {
 			if ((prevToken.isObject() or prevToken.isRightBracket() or prevToken.isKeyword()) and
-			    (token.isObject() or token.isLeftBracket() or token.isKeyword())) {
+			    (token.isObject() or token.isLeftBracket() or token.isKeyword() or token.isUnaryOperator())) {
 				if (index != firstIndex) {
-					// index = nextIndex(input, index);
-					break;
+					if (contain({EOL, EOE}, input[index - 1].type)) {
+						// index = nextIndex(input, index);
+						break;
+					} else {
+						return Exception(SyntaxError, getLineIndex(input, index));
+					}
 				}
 			}
 		}
@@ -666,6 +673,41 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 				}
 			}
 		}
+
+		// parse call
+		if (token.isObject() and input[index + 1].source == "(") {
+			if (token.type == Name and nameDeclaration(token.source) == DeclaredFunction) {
+				FunctionReturned functionReturned = parseFunctionCall(input, index);
+				if (functionReturned.exception.type != Nothing) {
+					return functionReturned.exception;
+				}
+				ret.content.push_back(functionReturned.item);
+			} else {
+				return Exception(CallError, getLineIndex(input, index));
+			}
+			continue;
+		}
+
+		// parse indexation
+		if (token.isObject() and nextToken.source == "[") {
+			continue;
+		}
+
+		// parse ternary operator
+		if (token.source == "if") {
+			continue;
+		}
+
+		// parse lambda
+		if (token.source == "lambda") {
+			continue;
+		}
+
+		// обращение к полю или методу
+		if (token.isObject() and input[index + 1].source == ".") {
+			continue;
+		}
+
 		if (token.type == Name) {
 			if (nameDeclaration(token.source) == Undeclared) {
 				return Exception(UndefinedNameUsage, getLineIndex(input, index));
@@ -692,6 +734,7 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 				continue;
 			}
 		}
+		cout << "[" << token.source << "]" << endl;
 		ret.content.push_back(Item(token));
 		index = nextIndex(input, index);
 	}
