@@ -193,4 +193,56 @@ Exception parseForStatement(const vector<Token> &input, int &index) {
 
 }
 
+ternaryReturned parseTernary(const vector<Token> &input, int &index) {
+	if (input[index].source != "if") {
+		return Exception(SyntaxError, getLineIndex(input, index));
+	}
+	index = nextIndex(input, index);
+	if (input[index].source != "(") {
+		return Exception(SyntaxError, getLineIndex(input, index));
+	}
+	index = nextIndex(input, index);
+	auto parseResult = parseExpression(input, index);
+	if (parseResult.exception.type != Nothing) {
+		return Exception(parseResult.exception.type, getLineIndex(input, index));
+	}
+	auto calculationResult = Calculate(parseResult.source);
+	if (calculationResult.exception.type != Nothing) {
+		return Exception(calculationResult.exception.type, getLineIndex(input, index));
+	}
+	Item item = calculationResult.item;
+	if (item.type != "Bool") {
+		return Exception(TypeError, getLineIndex(input, index));
+	}
+	bool logicValue = *static_cast<bool *>(item.value);
+	index = nextIndex(input, index);
+	parseResult = parseExpression(input, index);
+	if (parseResult.exception.type != Nothing) {
+		return Exception(parseResult.exception.type, getLineIndex(input, index));
+	}
+	if (logicValue) {
+		calculationResult = Calculate(parseResult.source);
+		if (calculationResult.exception.type != Nothing) {
+			return Exception(calculationResult.exception.type, getLineIndex(input, index));
+		}
+	}
+	Item item1 = calculationResult.item;
+	if (input[index].source != "else") {
+		return Exception(SyntaxError, getLineIndex(input, index));
+	}
+	index = nextIndex(input, index);
+	parseResult = parseExpression(input, index);
+	if (parseResult.exception.type != Nothing) {
+		return Exception(parseResult.exception.type, getLineIndex(input, index));
+	}
+	if (not logicValue) {
+		calculationResult = Calculate(parseResult.source);
+		if (calculationResult.exception.type != Nothing) {
+			return Exception(calculationResult.exception.type, getLineIndex(input, index));
+		}
+	}
+	Item item2 = calculationResult.item;
+	return logicValue ? item1 : item2;
+}
+
 #endif //NEKO_INTERPRETER_CONSTRUCTIONS_HPP

@@ -34,7 +34,11 @@ class Object {
 
   }
 
-  void iterate(){
+  void iterate() {
+
+  }
+
+  void bit() {
 
   }
 };

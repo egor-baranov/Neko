@@ -105,7 +105,9 @@ FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, i
 				bracketStack.pop();
 			}
 			functionObject.representation.push_back(input[index]);
-			index = nextIndex(input, index);
+			// TODO: возможны ошибки
+			++index;
+			// index = nextIndex(input, index);
 		}
 		index = nextIndex(input, index);
 	}

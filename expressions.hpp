@@ -119,7 +119,7 @@ struct Item {
 			  case UndefinedType:
 				  break;
 			  case FunctionType: {
-				  // Function tmpFunction = *static_cast<Function *>(value);
+				  Function tmpFunction = *static_cast<Function *>(value);
 				  break;
 			  }
 		  }
@@ -211,7 +211,6 @@ struct VariableObject {
 
   }
 };
-
 
 Exception execute(vector<Token> input);
 
@@ -646,6 +645,19 @@ struct FunctionDeclarationParsed {
 
 FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, int &index);
 
+struct ternaryReturned {
+  Item item;
+  Exception exception;
+
+  ternaryReturned(Item i, Exception e) : item(i), exception(e) {}
+
+  ternaryReturned(Item i) : item(i), exception(Nothing) {}
+
+  ternaryReturned(Exception e) : item(Item("")), exception(e) {}
+};
+
+ternaryReturned parseTernary(const vector<Token> &input, int &index);
+
 // TODO: add method call
 ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) {
 	Token token = input[index];
@@ -667,7 +679,7 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 			if ((prevToken.isObject() or prevToken.isRightBracket() or prevToken.isKeyword()) and
 			    (token.isObject() or token.isLeftBracket() or token.isKeyword() or token.isUnaryOperator())) {
 				if (index != firstIndex) {
-					if (contain({EOL, EOE}, input[index - 1].type)) {
+					if (contain({EOL, EOE}, input[index - 1].type) or token.source == "else") {
 						// index = nextIndex(input, index);
 						break;
 					} else {
@@ -709,6 +721,11 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 
 		// parse ternary operator
 		if (token.source == "if") {
+			auto result = parseTernary(input, index);
+			if (result.exception.type != Nothing) {
+				return result.exception;
+			}
+			ret.content.push_back(result.item);
 			continue;
 		}
 
