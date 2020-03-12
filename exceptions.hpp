@@ -48,7 +48,7 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
-	{CallError, "CallError"},
+	{CallError,                   "CallError"},
 	{RedefinationError,           "RedefinationError"},
 	{OperationArgumentExcess,     "OperationArgumentExcess"},
 	{ConstAssignment,             "ConstAssignment"},

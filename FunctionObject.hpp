@@ -17,7 +17,7 @@ bool operator==(Function a, Function b) {
 	return a.name == b.name;
 }
 
-Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
+FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	if (input.size() - index < 6) {
 		return Exception(FunctionDeclarationError, getLineIndex(input, index));
 	}
@@ -109,21 +109,24 @@ Exception parseFunctionDeclaration(const vector<Token> &input, int &index) {
 		}
 		index = nextIndex(input, index);
 	}
-	VariableObject newFunction;
-	newFunction.isMutable = true;
-	newFunction.type = "Function";
-	newFunction.name = functionObject.name;
-	newFunction.item = Item(static_cast<void *>(new Function(functionObject)), "Function");
-	Exception exception = scopeManager.add(newFunction);
-	if (exception.type != Nothing) {
-		return exception;
+	if (not functionObject.isLambda) {
+		VariableObject newFunction;
+		newFunction.isMutable = true;
+		newFunction.type = "Function";
+		newFunction.name = functionObject.name;
+		newFunction.item = Item(static_cast<void *>(new Function(functionObject)), "Function");
+		Exception exception = scopeManager.add(newFunction);
+		if (exception.type != Nothing) {
+			return exception;
+		}
 	}
-	return Exception(Nothing);
+	return functionObject;
 }
 
 FunctionReturned call(string functionName, vector<Item> &args, int functionCallIndex) {
 	if (scopeManager.find(functionName)) {
-		if (scopeManager.get(functionName).type == "Function") {
+		if (scopeManager.get(functionName).type == "Function" or
+		    scopeManager.get(functionName).item.type == "Function") {
 			return runWithArgs(scopeManager.getFunction(functionName), args);
 		}
 	}

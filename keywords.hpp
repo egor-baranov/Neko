@@ -22,7 +22,7 @@ set<string> BuiltInTypes{
 set<string> BuiltInClasses{
 	"Object", "NoneType",
 	"Bool",
-	"String", "Char",
+	"String", "Char", "Function",
 	"Unit",
 	"Number", "Int", "Float", "Complex", "MathNum", "BigInt", "BigFloat", "BigComplex",
 	"Container", "Array", "List", "Set", "Map",

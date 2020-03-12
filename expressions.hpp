@@ -119,7 +119,7 @@ struct Item {
 			  case UndefinedType:
 				  break;
 			  case FunctionType: {
-				  Function tmpFunction = *static_cast<Function *>(value);
+				  // Function tmpFunction = *static_cast<Function *>(value);
 				  break;
 			  }
 		  }
@@ -324,7 +324,8 @@ struct ScopeManager {
 
   Function getFunction(string name) {
 	  VariableObject obj = get(name);
-	  return *static_cast<Function * >(obj.item.value);
+
+	  return *static_cast<Function *>(obj.item.value);
   }
 
   bool find(string name) {
@@ -356,7 +357,7 @@ nameType nameDeclaration(string name) {
 	}
 	if (scopeManager.find(name)) {
 		VariableObject obj = scopeManager.get(name);
-		if (obj.type == "Function") {
+		if (obj.type == "Function" or obj.item.type == "Function") {
 			return DeclaredFunction;
 		}
 		return DeclaredVariable;
@@ -405,7 +406,7 @@ vector<Item> intoPostfixNotation(vector<Item> input) {
 				}
 				operations.pop();
 			} else {
-				output.push_back(token);
+				output.push_back(input[i]);
 			}
 		}
 	}
@@ -632,6 +633,19 @@ struct ParseExpressionReturned {
   ParseExpressionReturned(Exception e) : exception(e) {}
 };
 
+struct FunctionDeclarationParsed {
+  Function function;
+  Exception exception;
+
+  FunctionDeclarationParsed(Function f, Exception e) : function(f), exception(e) {}
+
+  FunctionDeclarationParsed(Function f) : function(f), exception(Nothing) {}
+
+  FunctionDeclarationParsed(Exception e) : function(Function()), exception(e) {}
+};
+
+FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, int &index);
+
 // TODO: add method call
 ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) {
 	Token token = input[index];
@@ -674,7 +688,7 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 			}
 		}
 
-		// parse call
+		// parse call TODO: change to isCallable()
 		if (token.isObject() and input[index + 1].source == "(") {
 			if (token.type == Name and nameDeclaration(token.source) == DeclaredFunction) {
 				FunctionReturned functionReturned = parseFunctionCall(input, index);
@@ -700,6 +714,11 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 
 		// parse lambda
 		if (token.source == "lambda") {
+			auto result = parseFunctionDeclaration(input, index);
+			if (result.exception.type != Nothing) {
+				return result.exception;
+			}
+			ret.content.push_back(Item(static_cast<void *>(new Function(result.function)), "Function"));
 			continue;
 		}
 
@@ -734,7 +753,7 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 				continue;
 			}
 		}
-		cout << "[" << token.source << "]" << endl;
+		// cout << "[" << token.source << "]" << endl;
 		ret.content.push_back(Item(token));
 		index = nextIndex(input, index);
 	}

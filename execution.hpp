@@ -38,11 +38,11 @@ Exception executeScope(vector<Token> input) {
 			return formatException(exception, getLineIndex(input, index));
 		}
 		if (token.source == "fun") {
-			Exception exception = parseFunctionDeclaration(input, index);
-			if (exception.type == Nothing) {
+			auto result = parseFunctionDeclaration(input, index);
+			if (result.exception.type == Nothing) {
 				continue;
 			}
-			return formatException(exception, getLineIndex(input, index));
+			return formatException(result.exception, getLineIndex(input, index));
 		}
 		if (token.source == "class") {
 			Exception exception = parseClassDeclaration(input, index);
