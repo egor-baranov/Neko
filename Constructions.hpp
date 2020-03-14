@@ -130,7 +130,7 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 	}
 	index = nextIndex(input, index);
 	const int conditionIndex = index;
-	auto parseResult = parseExpression(input, conditionIndex);
+	auto parseResult = parseExpression(input, index);
 	if (parseResult.exception.type != Nothing) {
 		return Exception(parseResult.exception.type, getLineIndex(input, index));
 	}

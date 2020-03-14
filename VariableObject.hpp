@@ -55,7 +55,7 @@ VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, i
 	}
 	if (assignmentOperator.source == "=") {
 		VariableObject v = scopeManager.get(name);
-		if (v.isAnyType() and v.containType(calculateReturned.item.type)) {
+		if (not v.isAnyType() and not v.containType(calculateReturned.item.type)) {
 			return Exception(TypeError, getLineIndex(input, index));
 		}
 		scopeManager.setItem(name, calculateReturned.item);
