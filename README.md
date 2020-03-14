@@ -20,6 +20,13 @@ Neko is a scripting programming language inspired by Kotlin and Python, which is
 f = lambda(x) = x * (x + 3) % 23 ** 0.5
 ```
 * Division into low-level C++ types like int16, string, bool, etc and high-level types based on **Object** type. For example Int, Bool, Float, String
+* Partially dynamically typed variables: 
+```
+a: Int, String, Bool = 3 
+a = True // Ok
+a = "Hello" // Ok
+a = 3.2 // TypeError
+```
 * Functions with dynamic return value determination (can be used without **Any**, because it will be used as default return type):
 ```
 fun sum(a, b): Any = a + b 
