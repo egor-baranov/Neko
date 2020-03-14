@@ -88,7 +88,7 @@ Exception parseIfStatement(const vector<Token> &input, int &index) {
 			if (item.type != "Bool") {
 				return Exception(TypeError, getLineIndex(input, index));
 			}
-			logicValue = *static_cast<bool *>(item.value);
+			logicValue = static_cast<Bool *>(item.value)->value;
 		} else logicValue = true;
 		vector<Token> ifBody;
 		index = nextIndex(input, index);
@@ -134,7 +134,7 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 	}
 	index = nextIndex(input, index);
 	const int conditionIndex = index;
-	auto parseResult = parseExpression(input, index);
+	auto parseResult = parseExpression(input, conditionIndex);
 	if (parseResult.exception.type != Nothing) {
 		return Exception(parseResult.exception.type, getLineIndex(input, index));
 	}
@@ -146,7 +146,7 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 	if (item.type != "Bool") {
 		return Exception(TypeError, getLineIndex(input, index));
 	}
-	bool logicValue = *static_cast<bool *>(item.value);
+	bool logicValue = static_cast<Bool *>(item.value)->value;
 	vector<Token> whileBody;
 	index = nextIndex(input, index);
 	if (input[index].source != "{") {
@@ -179,7 +179,7 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 			return result.exception;
 		}
 		index = conditionIndex;
-		logicValue = *static_cast<bool *>(Calculate(parseExpression(input, index).source).item.value);
+		logicValue = static_cast<Bool *>(Calculate(parseExpression(input, index).source).item.value)->value;
 	}
 	index = endIndex;
 	return Nothing;
@@ -221,7 +221,7 @@ ternaryReturned parseTernary(const vector<Token> &input, int &index) {
 	if (item.type != "Bool") {
 		return Exception(TypeError, getLineIndex(input, index));
 	}
-	bool logicValue = *static_cast<bool *>(item.value);
+	bool logicValue = static_cast<Bool *>(item.value)->value;
 	index = nextIndex(input, index);
 	parseResult = parseExpression(input, index);
 	if (parseResult.exception.type != Nothing) {
