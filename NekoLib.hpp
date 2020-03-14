@@ -90,7 +90,7 @@ FunctionReturned readBool(vector<Item> &input) {
 	}
 	string s;
 	cin >> s;
-	Item ret = Item(getToken(s), "Bool");
+	Item ret = Item(getToken(toLowercase(s) == "true" ? "True" : "False"), "Bool");
 	if (ret.type != "Bool") {
 		return Exception(TypeError);
 	}

@@ -330,10 +330,16 @@ FunctionReturned runWithArgs(Function function, vector<Item> init) {
 	// TODO: add args
 	executeReturned result = execute(function.representation, variables);
 	if (result.exception.type == RETURN) {
+		if (not function.containType(result.item.type) and not function.isAnyType()) {
+			return Exception(TypeError);
+		}
 		return result.item;
 	}
 	if (result.exception.type != Nothing) {
 		return Exception(result.exception.type, result.exception.line + function.startIndex);
+	}
+	if (not function.containType("Unit") and not function.isAnyType()) {
+		return Exception(EndOfFunction);
 	}
 	return Exception(Nothing);
 }

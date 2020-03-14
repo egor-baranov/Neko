@@ -324,4 +324,20 @@ bool findElem(set<T> s, T elem) {
 	return s.contain(elem) != s.end();
 }
 
+string toLowercase(string input) {
+	string ret;
+	for (char c: input) {
+		ret += tolower(c);
+	}
+	return ret;
+}
+
+string toUppercase(string input) {
+	string ret;
+	for (char c: input) {
+		ret += toupper(c);
+	}
+	return ret;
+}
+
 #endif //NEKO_INTERPRETER_HELPERS_HPP

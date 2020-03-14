@@ -140,8 +140,8 @@ vector<Token> parse(vector<Token> input) {
 }
 
 // лексический анализ
-void open(string url) {
-	ifstream file(url);
+void open(string uri) {
+	ifstream file(uri);
 	string tmp, use;
 	vector<Token> res;
 	bool commented = false;

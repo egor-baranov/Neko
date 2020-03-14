@@ -10,6 +10,8 @@ enum ExType {
   BREAK, // служебные возвращаемые значения, показывающие, почему цикл был прерван или функция вернула значение
   CONTINUE,
   RETURN,
+  InputError, // ошибка ввода данных, например в readInt подается hello
+  EndOfFunction, // End of function reached
   CallError,
   RedefinitionError, // повторный declaration в том же скопе
   OperationArgumentExcess,
@@ -39,7 +41,6 @@ enum ExType {
   FunctionArgumentExcess,
   FunctionArgumentLack,
   IncorrectOperationArguments,
-  InputError,
   MathError,
   MemoryError,
   RuntimeError,
@@ -48,18 +49,20 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
-	{CallError,                "CallError"},
-	{RedefinitionError,        "RedefinitionError"},
-	{OperationArgumentExcess,  "OperationArgumentExcess"},
-	{ConstAssignment,          "ConstAssignment"},
-	{OperandTypeError,         "OperandTypeError"},
-	{TypeError,                "TypeError"},
-	{UnknownTypeError,         "UnknownTypeError"},
-	{UndefinedNameUsage,       "UndefinedNameUsage"},
-	{VariableDeclarationError, "VariableDeclarationError"},
-	{VariableAssignmentError,  "VariableAssignmentError"},
-	{FunctionDeclarationError, "FunctionDeclarationError"},
-	{AssignmentError,          "AssignmentError"},
+	{InputError,                  "InputError"},
+	{EndOfFunction,               "EndOfFunction"},
+	{CallError,                   "CallError"},
+	{RedefinitionError,           "RedefinitionError"},
+	{OperationArgumentExcess,     "OperationArgumentExcess"},
+	{ConstAssignment,             "ConstAssignment"},
+	{OperandTypeError,            "OperandTypeError"},
+	{TypeError,                   "TypeError"},
+	{UnknownTypeError,            "UnknownTypeError"},
+	{UndefinedNameUsage,          "UndefinedNameUsage"},
+	{VariableDeclarationError,    "VariableDeclarationError"},
+	{VariableAssignmentError,     "VariableAssignmentError"},
+	{FunctionDeclarationError,    "FunctionDeclarationError"},
+	{AssignmentError,             "AssignmentError"},
 	{OperatorPriorityError,       "OperatorPriorityError"},
 	{OperatorSequenceError,       "OperatorSequenceError"},
 	{TooManyPointsInNumber,       "TooManyPointsInNumber"},
@@ -78,7 +81,6 @@ map<ExType, string> ExTypeToString{
 	{FunctionArgumentLack,        "FunctionArgumentLack"},
 	{IncorrectOperationArguments, "IncorrectOperationArguments"},
 	{UnexpectedTokenError,        "UnexpectedTokenError"},
-	{InputError,                  "InputError"},
 	{MathError,                   "MathError"},
 	{MemoryError,                 "MemoryError"},
 	{RuntimeError,                "RuntimeError"},
