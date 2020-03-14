@@ -11,7 +11,7 @@ enum ExType {
   CONTINUE,
   RETURN,
   CallError,
-  RedefinationError, // повторный declaration в том же скопе
+  RedefinitionError, // повторный declaration в том же скопе
   OperationArgumentExcess,
   ConstAssignment, // присвоение значения константе
   OperandTypeError, // нет перегруженного оператора для выполнения операции, например 2 + "s"
@@ -48,18 +48,18 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
-	{CallError,                   "CallError"},
-	{RedefinationError,           "RedefinationError"},
-	{OperationArgumentExcess,     "OperationArgumentExcess"},
-	{ConstAssignment,             "ConstAssignment"},
-	{OperandTypeError,            "OperandTypeError"},
-	{TypeError,                   "TypeError"},
-	{UnknownTypeError,            "UnknownTypeError"},
-	{UndefinedNameUsage,          "UndefinedNameUsage"},
-	{VariableDeclarationError,    "VariableDeclarationError"},
-	{VariableAssignmentError,     "VariableAssignmentError"},
-	{FunctionDeclarationError,    "FunctionDeclarationError"},
-	{AssignmentError,             "AssignmentError"},
+	{CallError,                "CallError"},
+	{RedefinitionError,        "RedefinitionError"},
+	{OperationArgumentExcess,  "OperationArgumentExcess"},
+	{ConstAssignment,          "ConstAssignment"},
+	{OperandTypeError,         "OperandTypeError"},
+	{TypeError,                "TypeError"},
+	{UnknownTypeError,         "UnknownTypeError"},
+	{UndefinedNameUsage,       "UndefinedNameUsage"},
+	{VariableDeclarationError, "VariableDeclarationError"},
+	{VariableAssignmentError,  "VariableAssignmentError"},
+	{FunctionDeclarationError, "FunctionDeclarationError"},
+	{AssignmentError,          "AssignmentError"},
 	{OperatorPriorityError,       "OperatorPriorityError"},
 	{OperatorSequenceError,       "OperatorSequenceError"},
 	{TooManyPointsInNumber,       "TooManyPointsInNumber"},
@@ -235,12 +235,20 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
 			}
 		}
 
+		// TODO: возможны ошибки с Keyword
 		if (token.type == IntNumber) {
 			if (i != 0) {
-				if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i - 1].type))
+				if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i - 1].type)) {
 					return Exception(SyntaxError, lineIndex);
+				}
+				if (input[i - 1].type == Keyword and input[i - 1].source != "else") {
+					return Exception(SyntaxError, lineIndex);
+				}
 			}
 			if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i + 1].type)) {
+				return Exception(SyntaxError, lineIndex);
+			}
+			if (input[i + 1].type == Keyword and input[i + 1].source != "else") {
 				return Exception(SyntaxError, lineIndex);
 			}
 		}

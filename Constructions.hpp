@@ -107,12 +107,16 @@ Exception parseIfStatement(const vector<Token> &input, int &index) {
 			if (logicValue and not used) {
 				ifBody.push_back(input[index]);
 			}
-			index = nextIndex(input, index);
+			// TODO: возможны ошибки
+			// index = nextIndex(input, index);
+			index++;
 		}
 		index = nextIndex(input, index);
 		if (logicValue and not used) {
-			Exception exception = execute(ifBody);
-			if (exception.type != Nothing) return exception;
+			executeReturned result = execute(ifBody);
+			if (result.exception.type != Nothing) {
+				return result.exception;
+			}
 			used = true;
 		}
 	} while (contain({"else", "elif"}, input[index].source));
@@ -160,15 +164,19 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 		if (logicValue) {
 			whileBody.push_back(input[index]);
 		}
-		index = nextIndex(input, index);
+		// TODO: возможны ошибки
+		// index = nextIndex(input, index);
+		index++;
 	}
 	index = nextIndex(input, index);
 	const int endIndex = index;
 	while (logicValue) {
-		Exception exception = execute(whileBody);
-		if (not contain({Nothing, CONTINUE}, exception.type)) {
-			if (exception.type == BREAK) break;
-			return exception;
+		executeReturned result = execute(whileBody);
+		if (not contain({Nothing, CONTINUE}, result.exception.type)) {
+			if (result.exception.type == BREAK) {
+				break;
+			}
+			return result.exception;
 		}
 		index = conditionIndex;
 		logicValue = *static_cast<bool *>(Calculate(parseExpression(input, index).source).item.value);
@@ -190,7 +198,6 @@ Exception parseForStatement(const vector<Token> &input, int &index) {
 	if (input[index].type != Name) {
 		return Exception(SyntaxError, getLineIndex(input, index));
 	}
-
 }
 
 ternaryReturned parseTernary(const vector<Token> &input, int &index) {

@@ -14,7 +14,7 @@ Exception formatException(Exception e, int lineIndex) {
 	return Exception(e.type, lineIndex);
 }
 
-Exception executeScope(vector<Token> input) {
+executeReturned executeScope(vector<Token> input) {
 	int index = 0;
 	if (input.back().type != EOfF) {
 		input.push_back(endOfFile);
@@ -83,14 +83,26 @@ Exception executeScope(vector<Token> input) {
 			return formatException(exception, getLineIndex(input, index));
 		}
 		if (token.source == "break") {
-			return BREAK;
+			return Exception(BREAK);
 		}
 		if (token.source == "continue") {
-			return CONTINUE;
+			return Exception(CONTINUE);
 		}
-		// TODO: return в возвращаемым значением
+		// TODO: return с возвращаемым значением
 		if (token.source == "return") {
-			return RETURN;
+			if (contain({EOL, EOE}, input[index + 1].type)) {
+				return Exception(RETURN);
+			}
+			index = nextIndex(input, index);
+			auto result = parseExpression(input, index);
+			if (result.exception.type != Nothing) {
+				return result.exception;
+			}
+			auto calculated = Calculate(result.source);
+			if (calculated.exception.type != Nothing) {
+				return calculated.exception;
+			}
+			return {calculated.item, Exception(RETURN)};
 		}
 		auto returnedExpression = parseExpression(input, index);
 		if (returnedExpression.exception.type != Nothing) {
@@ -98,17 +110,17 @@ Exception executeScope(vector<Token> input) {
 		}
 		// execute(returnedExpression.source);
 	}
-	return Nothing;
+	return Exception(Nothing);
 }
 
-Exception execute(vector<Token> input) {
+executeReturned execute(vector<Token> input) {
 	scopeManager.addScope();
-	Exception ret = executeScope(input);
+	executeReturned ret = executeScope(input);
 	scopeManager.deleteLastScope();
 	return ret;
 }
 
-Exception execute(vector<Token> input, vector<VariableObject> init) {
+executeReturned execute(vector<Token> input, vector<VariableObject> init) {
 	scopeManager.addScope();
 	for (VariableObject v: init) {
 		Exception exception = scopeManager.add(v);
@@ -116,7 +128,7 @@ Exception execute(vector<Token> input, vector<VariableObject> init) {
 			return exception;
 		}
 	}
-	Exception ret = executeScope(input);
+	executeReturned ret = executeScope(input);
 	scopeManager.deleteLastScope();
 	return ret;
 }

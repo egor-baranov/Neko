@@ -15,7 +15,5 @@ int main() {
 //  }
 //  // tokenizeFile("input.neko", "uncommented.txt");
 	open("input.neko");
-	// vector<Item> v = vector<Item>(10, Item(static_cast<void *>(new Function()), "Function"));
-	// v.pop_back();
 	return 0;
 }

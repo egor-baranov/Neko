@@ -54,7 +54,8 @@ VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, i
 		return Exception(calculateReturned.exception.type, getLineIndex(input, index));
 	}
 	if (assignmentOperator.source == "=") {
-		if (not contain({"Any", calculateReturned.item.type}, scopeManager.get(name).type)) {
+		VariableObject v = scopeManager.get(name);
+		if (v.isAnyType() and v.containType(calculateReturned.item.type)) {
 			return Exception(TypeError, getLineIndex(input, index));
 		}
 		scopeManager.setItem(name, calculateReturned.item);
@@ -65,7 +66,8 @@ VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, i
 		if (processed.exception.type != Nothing) {
 			return Exception(processed.exception.type, getLineIndex(input, index));
 		}
-		if (not contain({"Any", processed.item.type}, scopeManager.get(name).type)) {
+		VariableObject v = scopeManager.get(name);
+		if (v.isAnyType() and v.containType(processed.item.type)) {
 			return Exception(TypeError, getLineIndex(input, index));
 		}
 		scopeManager.setItem(name, processed.item);
@@ -90,6 +92,7 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 	if (not contain({"=", ":=", ":"}, input[index].source)) {
 		return Exception(VariableDeclarationError, getLineIndex(input, index));
 	}
+	// типы переменной
 	if (input[index].source == ":") {
 		index = nextIndex(input, index);
 		if (not contain({Name}, input[index].type)) {
@@ -98,11 +101,22 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 		if (not isBuildInType(input[index]) and not isDeclaredClass(input[index])) {
 			return Exception(UnknownTypeError, getLineIndex(input, index));
 		}
-		variable.type = input[index].source;
+		variable.addType(input[index].source);
 		index = nextIndex(input, index);
-	}
-	if (not contain({"=", ":="}, input[index].source)) {
-		return Exception(VariableDeclarationError, getLineIndex(input, index));
+		while (not contain({"=", ":="}, input[index].source)) {
+			if (input[index].source != ",") {
+				return Exception(VariableDeclarationError, getLineIndex(input, index));
+			}
+			index = nextIndex(input, index);
+			if (not contain({Name}, input[index].type)) {
+				return Exception(VariableDeclarationError, getLineIndex(input, index));
+			}
+			if (not isBuildInType(input[index]) and not isDeclaredClass(input[index])) {
+				return Exception(UnknownTypeError, getLineIndex(input, index));
+			}
+			variable.addType(input[index].source);
+			index = nextIndex(input, index);
+		}
 	}
 	index = nextIndex(input, index);
 	ParseExpressionReturned result = parseExpression(input, index);
@@ -113,7 +127,7 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 	if (calculateReturned.exception.type != Nothing) {
 		return Exception(calculateReturned.exception.type, getLineIndex(input, index));
 	}
-	if (variable.type != "Any" and variable.type != calculateReturned.item.type) {
+	if (variable.isAnyType() and variable.containType(calculateReturned.item.type)) {
 		return Exception(TypeError, getLineIndex(input, index));
 	}
 	variable.item = calculateReturned.item;

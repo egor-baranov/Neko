@@ -65,18 +65,42 @@ void *getValue(const string &type, const Token token) {
 }
 
 struct FunctionArgument {
+  string type = "Any";
+
+  public:
   bool ref = false;
   string name = "";
-  string type = "Any";
 };
 
 struct Function : Object {
+  private:
+  set<string> type{"Any"};
+
+  public:
   bool isLambda = false;
   string name = "";
-  string type = "Any";
-  int startIndex = -1000;
+  int startIndex = -1;
   vector<Token> representation;
   vector<FunctionArgument> args;
+
+  bool isAnyType() {
+	  return type.find("Any") != type.end();
+  }
+
+  void addType(string t) {
+	  if (type.find("Any") != type.end()) {
+		  type.clear();
+	  }
+	  type.insert(t);
+  }
+
+  set<string> getType() {
+	  return type;
+  }
+
+  bool containType(string t) {
+	  return type.find(t) != type.end();
+  }
 };
 
 
@@ -202,53 +226,48 @@ struct Expression {
 };
 
 struct VariableObject {
+  private:
+  set<string> type{"Any"};
+
+  public:
   bool isMutable = true;
   string name = "";
-  string type = "Any";
   Item item = Item(emptyToken);
 
-  VariableObject() {
+  bool isAnyType() {
+	  return type.find("Any") != type.end();
+  }
 
+  void addType(string t) {
+	  if (type.find("Any") != type.end()) {
+		  type.clear();
+	  }
+	  type.insert(t);
+  }
+
+  set<string> getType() {
+	  return type;
+  }
+
+  bool containType(string t) {
+	  return type.find(t) != type.end();
   }
 };
 
-Exception execute(vector<Token> input);
+struct executeReturned {
+  Exception exception;
+  Item item;
 
-Exception execute(vector<Token> input, vector<VariableObject> init);
+  executeReturned(Item i, Exception e) : item(i), exception(e) {}
 
-Exception runWithArgs(Function function, vector<Item> init) {
-	if (init.size() < function.args.size()) {
-		return Exception(FunctionArgumentLack, function.startIndex);
-	}
+  executeReturned(Item i) : item(i), exception(Nothing) {}
 
-	if (init.size() > function.args.size()) {
-		return Exception(FunctionArgumentExcess, function.startIndex);
-	}
+  executeReturned(Exception e) : item(""), exception(e) {}
+};
 
-	for (int i = 0; i < function.args.size(); ++i) {
-		if (function.args[i].type == init[i].type or function.args[i].type == "Any") {
-			continue;
-		}
-		return TypeError;
-	}
+executeReturned execute(vector<Token> input);
 
-	vector<VariableObject> variables;
-
-	for (int i = 0; i < function.args.size(); ++i) {
-		VariableObject v;
-		v.item = init[i];
-		v.type = function.args[i].type;
-		v.name = function.args[i].name;
-		variables.push_back(v);
-	}
-
-	// TODO: add args
-	Exception exception = execute(function.representation, variables);
-	if (exception.type != Nothing) {
-		return Exception(exception.type, exception.line + function.startIndex);
-	}
-	return Nothing;
-}
+executeReturned execute(vector<Token> input, vector<VariableObject> init);
 
 set<string> BuiltInFunctions{
 	"print", "println",
@@ -282,8 +301,43 @@ FunctionReturned parseFunctionCall(const vector<Token> &input, int &index);
 
 const FunctionReturned VoidResult = {Item(getToken("")), Nothing, true};
 
-//map<string, VariableObject> Variables;
-//map<string, Function> Functions;
+FunctionReturned runWithArgs(Function function, vector<Item> init) {
+	if (init.size() < function.args.size()) {
+		return Exception(FunctionArgumentLack, function.startIndex);
+	}
+
+	if (init.size() > function.args.size()) {
+		return Exception(FunctionArgumentExcess, function.startIndex);
+	}
+
+	for (int i = 0; i < function.args.size(); ++i) {
+		if (function.args[i].type == init[i].type or function.args[i].type == "Any") {
+			continue;
+		}
+		return Exception(TypeError);
+	}
+
+	vector<VariableObject> variables;
+
+	for (int i = 0; i < function.args.size(); ++i) {
+		VariableObject v;
+		v.item = init[i];
+		v.addType(function.args[i].type);
+		v.name = function.args[i].name;
+		variables.push_back(v);
+	}
+
+	// TODO: add args
+	executeReturned result = execute(function.representation, variables);
+	if (result.exception.type == RETURN) {
+		return result.item;
+	}
+	if (result.exception.type != Nothing) {
+		return Exception(result.exception.type, result.exception.line + function.startIndex);
+	}
+	return Exception(Nothing);
+}
+
 map<string, ClassObject> Classes;
 
 struct ScopeManager {
@@ -296,7 +350,7 @@ struct ScopeManager {
 
   Exception add(VariableObject v) {
 	  if (m.back().find(v.name) != m.back().end()) {
-		  return RedefinationError;
+		  return RedefinitionError;
 	  }
 	  m.back()[v.name] = v;
 	  return Nothing;
@@ -356,7 +410,7 @@ nameType nameDeclaration(string name) {
 	}
 	if (scopeManager.find(name)) {
 		VariableObject obj = scopeManager.get(name);
-		if (obj.type == "Function" or obj.item.type == "Function") {
+		if (obj.containType("Function") or obj.item.type == "Function") {
 			return DeclaredFunction;
 		}
 		return DeclaredVariable;
@@ -771,6 +825,10 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 //			}
 		}
 		// cout << "[" << token.source << "]" << endl;
+		// TODO: возможны ошибки
+		if (token.type == Keyword and not contain({"this"}, token.source)) {
+			return Exception(SyntaxError, getLineIndex(input, index));
+		}
 		ret.content.push_back(Item(token));
 		index = nextIndex(input, index);
 	}

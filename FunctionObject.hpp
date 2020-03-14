@@ -81,11 +81,22 @@ FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, i
 		if (not isBuildInType(input[index]) and not isDeclaredClass(input[index])) {
 			return Exception(UnknownTypeError, getLineIndex(input, index));
 		}
-		functionObject.type = input[index].source;
+		functionObject.addType(input[index].source);
 		index = nextIndex(input, index);
-	}
-	if (not contain({"=", "{"}, input[index].source)) {
-		return Exception(FunctionDeclarationError, getLineIndex(input, index));
+		while (not contain({"=", "{"}, input[index].source)) {
+			if (input[index].source != ",") {
+				return Exception(FunctionDeclarationError, getLineIndex(input, index));
+			}
+			index = nextIndex(input, index);
+			if (not contain({Name}, input[index].type)) {
+				return Exception(FunctionDeclarationError, getLineIndex(input, index));
+			}
+			if (not isBuildInType(input[index]) and not isDeclaredClass(input[index])) {
+				return Exception(UnknownTypeError, getLineIndex(input, index));
+			}
+			functionObject.addType(input[index].source);
+			index = nextIndex(input, index);
+		}
 	}
 	if (input[index].source == "=") {
 		index = nextIndex(input, index);
@@ -93,7 +104,7 @@ FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, i
 		if (result.exception.type != Nothing) {
 			return result.exception;
 		}
-		// functionObject.representation.push_back(result.source);
+		// functionObject.representation = readExpression(input, index);
 	} else {
 		index = nextIndex(input, index);
 		stack<string> bracketStack;
@@ -114,7 +125,7 @@ FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, i
 	if (not functionObject.isLambda) {
 		VariableObject newFunction;
 		newFunction.isMutable = true;
-		newFunction.type = "Function";
+		newFunction.addType("Function");
 		newFunction.name = functionObject.name;
 		newFunction.item = Item(static_cast<void *>(new Function(functionObject)), "Function");
 		Exception exception = scopeManager.add(newFunction);
@@ -122,13 +133,16 @@ FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, i
 			return exception;
 		}
 	}
-	return functionObject;
+	if(functionObject.isLambda) {
+		return functionObject;
+	}
+	return Exception(Nothing);
 }
 
 FunctionReturned call(string functionName, vector<Item> &args, int functionCallIndex) {
 	if (scopeManager.find(functionName)) {
-		if (scopeManager.get(functionName).type == "Function" or
-		    scopeManager.get(functionName).item.type == "Function") {
+		VariableObject v = scopeManager.get(functionName);
+		if (v.containType("Function") or scopeManager.get(functionName).item.type == "Function") {
 			return runWithArgs(scopeManager.getFunction(functionName), args);
 		}
 	}

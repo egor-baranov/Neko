@@ -212,9 +212,9 @@ void open(string url) {
 	}
 	// cout << format(res, true) << endl;
 	// cout << format(res, false) << endl;
-	Exception executionException = execute(res);
-	if (executionException.type != Nothing) {
-		throwException(executionException);
+	executeReturned result = execute(res);
+	if (result.exception.type != Nothing) {
+		throwException(result.exception);
 		return;
 	}
 }

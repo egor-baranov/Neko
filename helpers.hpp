@@ -319,4 +319,9 @@ string multiply(string input, int count) {
 	return output;
 }
 
+template<typename T>
+bool findElem(set<T> s, T elem) {
+	return s.contain(elem) != s.end();
+}
+
 #endif //NEKO_INTERPRETER_HELPERS_HPP
