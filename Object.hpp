@@ -5,60 +5,88 @@
 #include "exceptions.hpp"
 
 class Object {
+  public:
   void *value;
 
-  void toBool() {
+  virtual void toBool() {
 
   }
 
-  void toString() {
-  }
-
-  void serialize() {
+  virtual void toString() {
 
   }
 
-  void call() {
+  virtual void serialize() {
 
   }
 
-  void index() {
+  virtual void call() {
 
   }
 
-  void contain(Object other) {
+  virtual void index() {
 
   }
 
-  void slice() {
+  virtual void contain(Object other) {
 
   }
 
-  void iterate() {
+  virtual void slice() {
 
   }
 
-  void bit() {
+  virtual void iterate() {
+
+  }
+
+  virtual void bit() {
 
   }
 };
 
 
 class Int : Object {
-  int value;
+  public:
+  long long value;
 
+  Int(long long init) : value(init) {}
 };
 
 class Float : Object {
-  double value;
+  public:
+  long double value;
+
+  Float(long double init) : value(init) {}
 };
 
 class Char : Object {
+  public:
+  char value;
 
+  Char(char init) : value(init) {}
+};
+
+class Bool : Object {
+  public:
+  bool value;
+
+  Bool(bool init) : value(init) {}
 };
 
 class String : Object {
+  public:
+  string value;
 
+  String(string init) : value(init) {}
 };
+
+class NoneT : Object {
+  public:
+  nullptr_t value;
+
+  NoneT(nullptr_t init) : value(init) {}
+};
+
 
 #endif //NEKO_INTERPRETER_OBJECT_HPP

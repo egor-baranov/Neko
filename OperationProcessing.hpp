@@ -103,7 +103,7 @@ bool isComparisonOperation(string op) {
 	return contain({"==", "!=", ">=", "<=", ">", "<"}, op);
 }
 
-int processOperation(int b, int a, string op) {
+int processOperation(long long b, long long a, string op) {
 	if (op == "+") {
 		return a + b;
 	}
@@ -139,7 +139,7 @@ int processOperation(int b, int a, string op) {
 	}
 }
 
-double processOperation(double b, double a, string op) {
+double processOperation(long double b, long double a, string op) {
 	if (op == "+") {
 		return a + b;
 	}
