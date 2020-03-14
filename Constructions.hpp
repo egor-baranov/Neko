@@ -58,8 +58,6 @@ struct InitializerListConstruction : BasicConstruction {
   }
 };
 
-// TODO: a = if (True) 3 else 4 (это надо в expressions.hpp добавить)
-
 Exception parseIfStatement(const vector<Token> &input, int &index) {
 	if (input[index].source != "if") {
 		return Exception(SyntaxError, getLineIndex(input, index));
@@ -107,8 +105,6 @@ Exception parseIfStatement(const vector<Token> &input, int &index) {
 			if (logicValue and not used) {
 				ifBody.push_back(input[index]);
 			}
-			// TODO: возможны ошибки
-			// index = nextIndex(input, index);
 			index++;
 		}
 		index = nextIndex(input, index);
@@ -164,8 +160,6 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 		if (logicValue) {
 			whileBody.push_back(input[index]);
 		}
-		// TODO: возможны ошибки
-		// index = nextIndex(input, index);
 		index++;
 	}
 	index = nextIndex(input, index);
