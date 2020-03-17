@@ -25,22 +25,44 @@ set<string> BuiltInClasses{
 	"String", "Char", "Function",
 	"Unit",
 	"Number", "Int", "Float", "Complex", "MathNum", "BigInt", "BigFloat", "BigComplex",
-	"Container", "Array", "List", "Set", "Map",
+	"Container",
+	"Array", "ArrayList",
+	"List", "MutableList",
+	"Set", "MutableSet",
+	"Map", "MutableMap"
 	"Any"
+};
+
+set<string> BuiltInFunctions{
+	"print", "println",
+	"readLine", "readInt", "readFloat", "readChar", "readString", "readBool",
+	"abs", "sqr", "sqrt",
+	"sin", "cos", "tg", "tan", "ctg", "ctan",
+	"asin", "acos", "atan", "atan2",
+	"log", "log2", "log10", "ln", "lg",
+	"rad2Deg", "deg2Rad", "ceil", "floor",
+	"min", "max", "sum", "mul",
+	"arrayOf", "intArrayOf",
+	"arrayListOf", "listOf",
+	"setOf", "mapOf"
 };
 
 set<string> Keywords{
 	"var", "val", "in",
 	"for", "while",
 	"if", "else", "elif",
-	"get", "set", "field", "value",
+	"get", "set", "field", "value", "readOnly", "writeOnly", "property"
 	"fun", "lambda", "return", "yield", "break", "continue",
 	"class", "this", "as", "is", "new", "delete",
 	"public", "private", "protected",
 	"static", "sealed", "abstract",
+	"virtual", "override"
 	"from", "import",
 	"thread", "ref",
-	"until", "downTo", "step"
+	"until", "downTo", "step",
+	"method",
+	"constructor",
+	"interface"
 };
 
 set<string> Constants{

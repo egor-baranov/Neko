@@ -246,4 +246,6 @@ ternaryReturned parseTernary(const vector<Token> &input, int &index) {
 	return logicValue ? item1 : item2;
 }
 
+
+
 #endif //NEKO_INTERPRETER_CONSTRUCTIONS_HPP

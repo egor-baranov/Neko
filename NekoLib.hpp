@@ -135,8 +135,8 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 		if (not input[0].isNumber()) {
 			return Exception(TypeError);
 		}
-		double x = (input[0].type == "Int" ? *static_cast<int *>(input[0].value)
-		                                   : *static_cast<double *>(input[0].value));
+		long double x = input[0].type == "Int" ? static_cast<Int *>(input[0].value)->value
+		                                       : static_cast<Float *>(input[0].value)->value;
 		if (contain({"abs", "sqr"}, functionName)) {
 			if (functionName == "abs") {
 				x = abs(x);
@@ -145,7 +145,7 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 				x = x * x;
 			}
 			if (input[0].type == "Int") {
-				return Item(static_cast<void *>(new int((int) x)), "Int");
+				return Item(static_cast<void *>(new Int((long long) x)), "Int");
 			}
 		}
 		if (functionName == "sqrt") {
@@ -190,7 +190,7 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 		if (functionName == "floor") {
 			x = floor(x);
 		}
-		return Item(static_cast<void *>(new double(x)), "Float");
+		return Item(static_cast<void *>(new Float(x)), "Float");
 	}
 	if (functionName == "log") {
 		if (input.size() == 0) {
@@ -202,24 +202,24 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 			if (input[0].isNotNumber()) {
 				return Exception(TypeError);
 			}
-			double x = (input[0].type == "Int" ? *static_cast<int *>(input[0].value)
-			                                   : *static_cast<double *>(input[0].value));
+			long double x = input[0].type == "Int" ? static_cast<Int *>(input[0].value)->value
+			                                       : static_cast<Float *>(input[0].value)->value;
 			if (x <= 0) {
 				return Exception(MathError);
 			}
-			return Item(static_cast<void *>(new double(log(x))), "Float");
+			return Item(static_cast<void *>(new Float(log(x))), "Float");
 		} else {
 			if (input[0].isNotNumber() or input[1].isNotNumber()) {
 				return Exception(TypeError);
 			}
-			double x = (input[0].type == "Int" ? *static_cast<int *>(input[0].value)
-			                                   : *static_cast<double *>(input[0].value)),
-				y = (input[0].type == "Int" ? *static_cast<int *>(input[1].value)
-				                            : *static_cast<double *>(input[1].value));
+			long double x = input[0].type == "Int" ? static_cast<Int *>(input[0].value)->value
+			                                       : static_cast<Float *>(input[0].value)->value,
+				y = input[0].type == "Int" ? static_cast<Int *>(input[1].value)->value
+				                           : static_cast<Float *>(input[1].value)->value;
 			if (x <= 0 or y <= 0 or x == 1) {
 				return Exception(MathError);
 			}
-			return Item(static_cast<void *>(new double(log(y) / log(x))), "Float");
+			return Item(static_cast<void *>(new Float(log(y) / log(x))), "Float");
 		}
 	}
 	if (functionName == "atan2") {
@@ -231,11 +231,11 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 		if (input[0].isNotNumber() or input[1].isNotNumber()) {
 			return Exception(TypeError);
 		}
-		double x = (input[0].type == "Int" ? *static_cast<int *>(input[0].value)
-		                                   : *static_cast<double *>(input[0].value)),
-			y = (input[0].type == "Int" ? *static_cast<int *>(input[1].value)
-			                            : *static_cast<double *>(input[1].value));
-		return Item(static_cast<void *>(new double(atan2(x, y))), "Float");
+		double x = input[0].type == "Int" ? static_cast<Int *>(input[0].value)->value
+		                                  : static_cast<Float *>(input[0].value)->value,
+			y = input[0].type == "Int" ? static_cast<Int *>(input[1].value)->value
+			                           : static_cast<Float *>(input[1].value)->value;
+		return Item(static_cast<void *>(new Float(atan2(x, y))), "Float");
 	}
 	if (contain({"max", "min"}, functionName)) {
 		if (input.size() == 0) {
