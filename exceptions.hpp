@@ -10,6 +10,7 @@ enum ExType {
   BREAK, // служебные возвращаемые значения, показывающие, почему цикл был прерван или функция вернула значение
   CONTINUE,
   RETURN,
+  ValueError, // Int("2..")
   EmptyContainerError, // напр. pop от пустого стека
   ConstructorCallError, // ошибка вызова конструктора
   IndexError,
@@ -52,6 +53,7 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
+	{ValueError,                  "ValueError"},
 	{EmptyContainerError,         "EmptyContainerError"},
 	{ConstructorCallError,        "ConstructorCallError"},
 	{IndexError,                  "IndexError"},

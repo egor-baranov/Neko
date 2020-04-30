@@ -238,7 +238,6 @@ Token next(vector<Token> input, int index) {
 	return input[nextIndex(input, index)];
 }
 
-// TODO: доделать приоритет унарных операций
 int getPriority(Token token) {
 	string input = token.source;
 	if (not token.isOperator()) {
@@ -250,38 +249,44 @@ int getPriority(Token token) {
 	if (contain({"&&"}, token.source)) {
 		return 3;
 	}
-	if (contain({"|"}, token.source)) {
+	if (contain({"in"}, token.source)) {
 		return 4;
 	}
-	if (contain({"^"}, token.source)) {
+	if (contain({"|"}, token.source)) {
 		return 5;
 	}
-	if (contain({"&"}, token.source)) {
+	if (contain({"^"}, token.source)) {
 		return 6;
 	}
-	if (contain({"==", "!="}, token.source)) {
+	if (contain({"&"}, token.source)) {
 		return 7;
 	}
-	if (contain({"<", "<=", ">", ">="}, token.source)) {
+	if (contain({".."}, token.source)) {
 		return 8;
 	}
-	if (contain({"<<", ">>"}, token.source)) {
+	if (contain({"==", "!="}, token.source)) {
 		return 9;
 	}
-	if (contain({"+", "-"}, token.source)) {
+	if (contain({"<", "<=", ">", ">="}, token.source)) {
 		return 10;
 	}
-	if (contain({"*", "/", "%", "**"}, token.source)) {
+	if (contain({"<<", ">>"}, token.source)) {
 		return 11;
 	}
-	if (contain({"**"}, token.source)) {
+	if (contain({"+", "-"}, token.source)) {
 		return 12;
 	}
-	if (contain({"!"}, token.source)) {
+	if (contain({"*", "/", "%", "**"}, token.source)) {
 		return 13;
 	}
-	if (contain({"$-", "$+"}, token.source)) {
+	if (contain({"**"}, token.source)) {
 		return 14;
+	}
+	if (contain({"!"}, token.source)) {
+		return 15;
+	}
+	if (contain({"$-", "$+"}, token.source)) {
+		return 16;
 	}
 	return 1;
 }

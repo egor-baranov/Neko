@@ -44,11 +44,13 @@ set<string> BuiltInFunctions{
 	"min", "max", "sum", "mul",
 	"arrayOf", "intArrayOf",
 	"arrayListOf", "listOf",
-	"setOf", "mapOf"
+	"setOf", "mapOf",
+	"type",
+	"len"
 };
 
 set<string> Keywords{
-	"var", "val", "in",
+	"var", "val",
 	"for", "while",
 	"if", "else", "elif",
 	"get", "set", "field", "value", "readOnly", "writeOnly", "property"
@@ -85,6 +87,7 @@ set<string> Operators{
 	"^", "~",
 	"+=", "-=", "*=", "**=", "^=", "&=", "|=", "/=", "%=", ":=",
 	"and", "or", "not", "xor",
+	"in", "..",
 	"$+", "$-" // унарные + и -
 };
 

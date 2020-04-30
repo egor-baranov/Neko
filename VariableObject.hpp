@@ -127,7 +127,7 @@ Exception parseVariableDeclaration(const vector<Token> &input, int &index) {
 	if (calculateReturned.exception.type != Nothing) {
 		return Exception(calculateReturned.exception.type, getLineIndex(input, index));
 	}
-	if (variable.isAnyType() and variable.containType(calculateReturned.item.type)) {
+	if (not variable.isAnyType() and not variable.containType(calculateReturned.item.type)) {
 		return Exception(TypeError, getLineIndex(input, index));
 	}
 	variable.item = calculateReturned.item;

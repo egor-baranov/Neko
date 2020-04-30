@@ -7,11 +7,6 @@
 #include "execution.hpp"
 #include "Object.hpp"
 
-// последовательности токенов (или item-ов, я пока хз), преобразованные в постфиксную запись для быстрого вычисления
-struct Expression {
-  vector<Item> content;
-};
-
 struct VariableObject {
   private:
   set<string> type{"Any"};
@@ -56,10 +51,6 @@ executeReturned execute(vector<Token> input);
 
 executeReturned execute(vector<Token> input, vector<VariableObject> init);
 
-struct ClassObject {
-  string name = "";
-  string parentName = "Object";
-};
 
 struct FunctionReturned {
   Item item;
@@ -120,8 +111,6 @@ FunctionReturned runWithArgs(Function function, vector<Item> init) {
 	return Exception(Nothing);
 }
 
-map<string, ClassObject> Classes;
-
 struct ScopeManager {
   public:
   vector<map<string, VariableObject>> m;
@@ -179,29 +168,7 @@ struct ScopeManager {
 
 ScopeManager scopeManager;
 
-enum nameType {
-  DeclaredVariable,
-  DeclaredFunction,
-  DeclaredClass,
-  Undeclared
-};
-
-nameType nameDeclaration(string name) {
-	if (BuiltInFunctions.find(name) != BuiltInFunctions.end()) {
-		return DeclaredFunction;
-	}
-	if (scopeManager.find(name)) {
-		VariableObject obj = scopeManager.get(name);
-		if (obj.containType("Function") or obj.item.type == "Function") {
-			return DeclaredFunction;
-		}
-		return DeclaredVariable;
-	}
-	if (Classes.find(name) != Classes.end()) {
-		return DeclaredClass;
-	}
-	return Undeclared;
-}
+ParseExpressionReturned parseExpression(const vector<Token> &input, int &index);
 
 bool isLeftAssociative(Item item) {
 	assert(toType(item.type) == OperationType);
@@ -250,6 +217,30 @@ vector<Item> intoPostfixNotation(vector<Item> input) {
 		operations.pop();
 	}
 	return output;
+}
+
+enum nameType {
+  DeclaredVariable,
+  DeclaredFunction,
+  DeclaredClass,
+  Undeclared
+};
+
+nameType nameDeclaration(string name) {
+	if (BuiltInFunctions.find(name) != BuiltInFunctions.end()) {
+		return DeclaredFunction;
+	}
+	if (scopeManager.find(name)) {
+		VariableObject obj = scopeManager.get(name);
+		if (obj.containType("Function") or obj.item.type == "Function") {
+			return DeclaredFunction;
+		}
+		return DeclaredVariable;
+	}
+	if (Classes.find(name) != Classes.end() or BuiltInClasses.find(name) != BuiltInClasses.end()) {
+		return DeclaredClass;
+	}
+	return Undeclared;
 }
 
 struct ProcessReturned {
@@ -388,15 +379,6 @@ ProcessReturned ProcessUnary(Item &a, Token op) {
 	}
 }
 
-struct CalculateReturned {
-  Item item;
-  Exception exception = Exception(Nothing);
-
-  CalculateReturned(Item item, Exception e = Nothing) : item(item), exception(e) {}
-
-  CalculateReturned(Exception e) : item(""), exception(e) {}
-};
-
 CalculateReturned Calculate(Expression expression) {
 //	if (expression.content.size() == 1) {
 //		Item ret = expression.content[0];
@@ -444,6 +426,7 @@ CalculateReturned Calculate(Expression expression) {
 	return values.top();
 }
 
+
 struct VariableAssignmentReturned {
   Item item;
   Exception exception;
@@ -456,17 +439,6 @@ struct VariableAssignmentReturned {
 };
 
 VariableAssignmentReturned parseVariableAssignment(const vector<Token> &input, int &index);
-
-struct ParseExpressionReturned {
-  Expression source;
-  Exception exception = Exception(Nothing);
-
-  ParseExpressionReturned(Expression s, Exception e) : source(s), exception(e) {}
-
-  ParseExpressionReturned(Expression s) : source(s), exception(Nothing) {}
-
-  ParseExpressionReturned(Exception e) : exception(e) {}
-};
 
 struct FunctionDeclarationParsed {
   Function function;
@@ -544,6 +516,13 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 					return functionReturned.exception;
 				}
 				ret.content.push_back(functionReturned.item);
+			} else if (token.type == Name and nameDeclaration(token.source) == DeclaredClass) {
+				ConstructorReturned constructorReturned = parseConstructorCall(input, index);
+				if (constructorReturned.exception.type != Nothing) {
+					return constructorReturned.exception;
+				}
+				ret.content.push_back(constructorReturned.item);
+				continue;
 			} else {
 				return Exception(CallError, getLineIndex(input, index));
 			}
@@ -552,6 +531,13 @@ ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) 
 
 		// parse indexation
 		if (token.isObject() and nextToken.source == "[") {
+
+			continue;
+		}
+
+		// parse array declaration
+		if (token.source == "[") {
+			// auto result = parseArray(input, index);
 			continue;
 		}
 

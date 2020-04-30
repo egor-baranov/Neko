@@ -88,7 +88,6 @@ executeReturned executeScope(vector<Token> input) {
 		if (token.source == "continue") {
 			return Exception(CONTINUE);
 		}
-		// TODO: return с возвращаемым значением
 		if (token.source == "return") {
 			if (contain({EOL, EOE}, input[index + 1].type)) {
 				return Exception(RETURN);

@@ -3,17 +3,15 @@
 
 #include "helpers.hpp"
 #include "exceptions.hpp"
+#include <set>
+#include <map>
+
+using namespace std;
 
 class Object {
   public:
 
   void *value;
-
-  virtual void toBool() {};
-
-  virtual void toString() {};
-
-  virtual void toInt() {};
 
   // сериализация объекта в JSON, в будущем возвращает JSONObject
   virtual void serialize() {};
@@ -67,6 +65,22 @@ class String : Object {
   string value;
 
   String(string init) : value(init) {}
+
+  Int toInt() {
+	  string ret;
+	  for (int i = 1; i < value.size() - 1; ++i) {
+		  ret += value[i];
+	  }
+	  return Int(stoll(ret));
+  }
+
+  Float toFloat() {
+	  string ret;
+	  for (int i = 1; i < value.size() - 1; ++i) {
+		  ret += value[i];
+	  }
+	  return Float(stold(ret));
+  }
 };
 
 class NoneT : Object {
@@ -84,7 +98,7 @@ struct FunctionArgument {
   string name = "";
 };
 
-struct Function : Object {
+class Function : Object {
   private:
   set<string> type{"Any"};
 
@@ -113,6 +127,10 @@ struct Function : Object {
   bool containType(string t) {
 	  return type.find(t) != type.end();
   }
+};
+
+class Range : Object {
+
 };
 
 string getType(Token token) {
@@ -288,9 +306,23 @@ class Item {
   }
 };
 
-bool operator>(Item &item1, Item &item2) {
-	return item1.value > item2.value;
+bool operator>(const Item &item1, const Item &item2) {
+	return item1.source > item2.source;
 }
+
+bool operator<(const Item &item1, const Item &item2) {
+	return item1.source < item2.source;
+}
+
+class Pair : Object {
+  public:
+  Item first, second;
+
+//  Pair(Item item1, Item item2) {
+//	  first = Item(item1.value, item1.source);
+//	  second = Item(item2.value, item2.source);
+//  }
+};
 
 struct ContainerReturned {
   Item item;
@@ -307,6 +339,8 @@ class Container : Object {
   protected:
   int length;
   public:
+  vector<Item> content;
+
   virtual Int getLength() {
 	  return Int(length);
   }
@@ -317,6 +351,10 @@ class Container : Object {
 	  return length == 0;
   }
 
+  virtual void clear() {
+	  this->content.clear();
+	  length = 0;
+  }
 };
 
 class Array : Container {
@@ -324,8 +362,6 @@ class Array : Container {
   int length;
   public:
   vector<Item> content;
-
-  Array(int n, Item init = Item("")) : length(0) {}
 
   Int getLength() {
 	  return Int(length);
@@ -336,6 +372,28 @@ class Array : Container {
 		  return Exception(IndexError);
 	  }
   }
+
+  Exception add(Item item) {
+	  this->content.push_back(item);
+  }
+
+  Array() : length(0) {}
+
+  Array(int n, Item init = Item("")) : length(0) {}
+
+  Array(Container init) {
+	  for (Item item : init.content) {
+		  this->add(item);
+	  }
+  }
+};
+
+class MutableArray : Array {
+  private:
+  int length;
+
+  MutableArray() : length(0) {}
+
 };
 
 class Stack : Container {
@@ -367,13 +425,14 @@ class Stack : Container {
 	  if (length == 0) {
 		  return Exception(EmptyContainerError);
 	  }
-	  return
+	  return content.top();
   }
 
-  Exception clear() {
+  void clear() {
 	  while (not content.empty()) {
 		  content.pop();
 	  }
+	  this->length = 0;
   }
 };
 
@@ -382,6 +441,8 @@ class Queue : Container {
   int length;
   public:
   queue<Item> content;
+
+
 };
 
 class Deque : Container {
@@ -397,6 +458,9 @@ class ArrayList : Array {
   public:
   vector<Item> content;
 
+  Exception add(Item item) {
+	  this->content.push_back(item);
+  }
 };
 
 class List : Container {
@@ -419,6 +483,20 @@ class Set : Container {
   public:
   set<Item> content;
 
+  Exception add(Item item) {
+	  this->content.insert(item);
+	  ++length;
+  }
+
+  Exception remove(Item item) {
+	  if (content.find(item) == content.end()) {
+		  return Exception(RuntimeError);
+	  }
+  }
+
+  Set() : length(0) {}
+
+  Set(Container init) : length(0) {}
 };
 
 class MutableSet : Set {
@@ -443,115 +521,282 @@ class MutableMap : Map {
   public:
   map<void *, Item> content;
 
+  MutableMap() : length(0) {}
 };
 
-Exception parseInitializerList(vector<Item> &input, int &index) {
+struct ClassObject {
+  string name = "";
+  string parentName = "Object";
+};
+
+map<string, ClassObject> Classes;
+
+struct ParserReturned {
+  Item item;
+  Exception exception;
+
+  ParserReturned(Item i, Exception e) : item(i), exception(e) {}
+
+  ParserReturned(Item i) : item(i), exception(Nothing) {}
+
+  ParserReturned(Exception e) : item(""), exception(e) {}
+};
+
+ParserReturned parseInitializerList(vector<Item> &input, int &index) {
 
 }
 
-Exception parseMethodCall() {
+ParserReturned parseMethodCall() {
 
 }
 
-Exception callMethod() {
+ParserReturned callMethod() {
 
 }
 
-Exception callConstructor(string className, vector<Item> &input) {
+// последовательности токенов (или item-ов, я пока хз), преобразованные в постфиксную запись для быстрого вычисления
+struct Expression {
+  vector<Item> content;
+};
+
+struct ParseExpressionReturned {
+  Expression source;
+  Exception exception = Exception(Nothing);
+
+  ParseExpressionReturned(Expression s, Exception e) : source(s), exception(e) {}
+
+  ParseExpressionReturned(Expression s) : source(s), exception(Nothing) {}
+
+  ParseExpressionReturned(Exception e) : exception(e) {}
+};
+
+ParseExpressionReturned parseExpression(const vector<Token> &input, int &index);
+
+struct CalculateReturned {
+  Item item;
+  Exception exception = Exception(Nothing);
+
+  CalculateReturned(Item item, Exception e = Nothing) : item(item), exception(e) {}
+
+  CalculateReturned(Exception e) : item(""), exception(e) {}
+};
+
+CalculateReturned Calculate(Expression expression);
+
+struct ConstructorReturned {
+  Item item;
+  Exception exception;
+
+  ConstructorReturned(Item i, Exception e) : item(i), exception(e) {}
+
+  ConstructorReturned(Item i) : item(i), exception(Nothing) {}
+
+  ConstructorReturned(Exception e) : item(""), exception(e) {}
+};
+
+// 'a' -> a, "a" -> a
+string formatString(string inp) {
+	string ret;
+	for (int i = 1; i < inp.size() - 1; ++i) {
+		ret += inp[i];
+	}
+	return ret;
+}
+
+ConstructorReturned callConstructor(string className, vector<Item> &args) {
 	if (contain({"Object", "Container", "Any", "Unit"}, className)) {
 		return Exception(ConstructorCallError);
 	}
+	if (args.size() == 1) {
+		if (args[0].type == className) {
+			return args[0];
+		}
+	}
 	if (className == "Int") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		if (args.size() == 0) {
+			return Item(static_cast<void *>(new Int(0)), "Int");
+		}
+		Item arg = args[0];
+		if (arg.type == "String") {
+			string formatted = formatString(arg.source);
+			if (getToken(formatted).type == IntNumber) {
+				return Item(static_cast<void *>(new Int(stoll(formatted))), "Int");
+			} else {
+				return Exception(ValueError);
+			}
+		}
+		if (arg.type == "Float") {
+			Float v = *static_cast<Float *>(arg.value);
+			return Item(static_cast<void *>(new Int(v.value)), "Int");
+		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Float") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		if (args.size() == 0) {
+			return Item(static_cast<void *>(new Float(0)), "Float");
+		}
+		Item arg = args[0];
+		if (arg.type == "String") {
+			string formatted = formatString(arg.source);
+			if (arg.token.type == FloatNumber) {
+				return Item(static_cast<void *>(new Float(stold(formatted))), "Float");
+			} else {
+				return Exception(ValueError);
+			}
+		}
+		if (arg.type == "Int") {
+			Int v = *static_cast<Int *>(arg.value);
+			return Item(static_cast<void *>(new Float(v.value)), "Float");
+		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "String") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		if (args.size() == 0) {
+			return Item(static_cast<void *>(new String("")), "String");
+		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Char") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		if (args.size() == 0) {
+			return Item(static_cast<void *>(new Char(' ')), "Char");
+		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Bool") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		if (args.size() == 0) {
+			return Item(static_cast<void *>(new Bool(false)), "Bool");
+		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Function") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "NoneType") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Array") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "ArrayList") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "List") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "MutableList") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Stack") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Queue") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Deque") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Set") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "MutableSet") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "Map") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	if (className == "MutableMap") {
-		if (input.size() > 1) {
+		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}
+		return Exception(ConstructorCallError);
 	}
 	return Exception(UnknownTypeError);
+}
+
+
+ConstructorReturned parseConstructorCall(const vector<Token> &input, int &index) {
+	if (Classes.find(input[index].source) == Classes.end() and
+	    BuiltInClasses.find(input[index].source) == BuiltInClasses.end()) {
+		return Exception(ConstructorCallError, getLineIndex(input, index));
+	}
+	string className = input[index].source;
+	int constructorCallIndex = getLineIndex(input, index);
+	index = nextIndex(input, index);
+	if (input[index].source != "(") {
+		return Exception(ConstructorCallError, getLineIndex(input, index));
+	}
+	index = nextIndex(input, index);
+	vector<Item> args;
+	while (input[index].source != ")") {
+		auto result = parseExpression(input, index);
+		if (result.exception.type != Nothing) {
+			return Exception(result.exception.type, getLineIndex(input, index));
+		}
+		CalculateReturned calculateReturned = Calculate(result.source);
+		if (calculateReturned.exception.type != Nothing) {
+			return Exception(calculateReturned.exception.type, getLineIndex(input, index));
+		}
+		args.push_back(calculateReturned.item);
+		if (not contain({")", ","}, input[index].source)) {
+			return Exception(ConstructorCallError, getLineIndex(input, index));
+		}
+		if (input[index].source == ",") {
+			index = nextIndex(input, index);
+		}
+	}
+	index = nextIndex(input, index);
+	return callConstructor(className, args);
 }
 
 #endif //NEKO_INTERPRETER_OBJECT_HPP

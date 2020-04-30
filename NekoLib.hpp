@@ -35,11 +35,10 @@ FunctionReturned readInt(vector<Item> &input) {
 	}
 	string s;
 	cin >> s;
-	Item ret = Item(getToken(s), "Int");
-	if (ret.type != "Int") {
-		return Exception(TypeError);
+	if (getToken(s).type != IntNumber) {
+		return Exception(InputError);
 	}
-	return ret;
+	return Item(getToken(s), "Int");
 }
 
 FunctionReturned readFloat(vector<Item> &input) {
@@ -48,11 +47,10 @@ FunctionReturned readFloat(vector<Item> &input) {
 	}
 	string s;
 	cin >> s;
-	Item ret = Item(getToken(s), "Float");
-	if (ret.type != "Float") {
-		return Exception(TypeError);
+	if (getToken(s).type != FloatNumber) {
+		return Exception(InputError);
 	}
-	return ret;
+	return Item(getToken(s), "Float");
 }
 
 FunctionReturned readString(vector<Item> &input) {
@@ -61,11 +59,7 @@ FunctionReturned readString(vector<Item> &input) {
 	}
 	string s;
 	cin >> s;
-	Item ret = Item(getToken("\"" + s + "\""), "String");
-	if (ret.type != "String") {
-		return Exception(TypeError);
-	}
-	return ret;
+	return Item(getToken("\"" + s + "\""), "String");
 }
 
 FunctionReturned readChar(vector<Item> &input) {
@@ -77,11 +71,7 @@ FunctionReturned readChar(vector<Item> &input) {
 	if (s.size() != 1) {
 		return Exception(CharFormatError);
 	}
-	Item ret = Item(getToken("\'" + s + "\'"), "Char");
-	if (ret.type != "Char") {
-		return Exception(TypeError);
-	}
-	return ret;
+	return Item(getToken("\'" + s + "\'"), "Char");
 }
 
 FunctionReturned readBool(vector<Item> &input) {
@@ -269,6 +259,40 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 			ret = returned.item;
 		}
 		return ret;
+	}
+	if (functionName == "type") {
+		if (input.size() == 0) {
+			return Exception(FunctionArgumentLack);
+		}
+		if (input.size() > 1) {
+			return Exception(FunctionArgumentExcess);
+		}
+		return Item(static_cast<void *> (new String(input[0].type)), "String");
+	}
+	if (functionName == "arrayOf") {
+		Array array;
+		for (Item item : input) {
+			array.add(item);
+		}
+		return Item(static_cast<void *> (new Array(array)), "Array");
+	}
+	if (functionName == "arrayListOf") {
+		ArrayList arrayList;
+		for (Item item : input) {
+			arrayList.add(item);
+		}
+	}
+	if (functionName == "mutableArrayListOf") {
+		ArrayList arrayList;
+		for (Item item : input) {
+			arrayList.add(item);
+		}
+	}
+	if (functionName == "listOf") {
+
+	}
+	if (functionName == "setOf") {
+
 	}
 	return Exception(UndefinedNameUsage);
 }

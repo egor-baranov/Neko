@@ -15,5 +15,7 @@ int main() {
 //  }
 //  // tokenizeFile("input.neko", "uncommented.txt");
 	open("input.neko");
+
+	// for(int i:)
 	return 0;
 }
