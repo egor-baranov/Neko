@@ -210,9 +210,9 @@ void open(string uri) {
 		throwException(semanticException);
 		return;
 	}
-	// cout << format(res, true) << endl;
-	// cout << format(res, false) << endl;
-	executeReturned result = execute(res);
+//	 cout << format(res, true) << endl;
+//	 cout << format(res, false) << endl;
+	ExecuteReturned result = execute(res);
 	if (result.exception.type != Nothing) {
 		throwException(result.exception);
 		return;

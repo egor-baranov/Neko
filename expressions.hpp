@@ -36,20 +36,20 @@ struct VariableObject {
   }
 };
 
-struct executeReturned {
+struct ExecuteReturned {
   Exception exception;
   Item item;
 
-  executeReturned(Item i, Exception e) : item(i), exception(e) {}
+  ExecuteReturned(Item i, Exception e) : item(i), exception(e) {}
 
-  executeReturned(Item i) : item(i), exception(Nothing) {}
+  ExecuteReturned(Item i) : item(i), exception(Nothing) {}
 
-  executeReturned(Exception e) : item(""), exception(e) {}
+  ExecuteReturned(Exception e) : item(""), exception(e) {}
 };
 
-executeReturned execute(vector<Token> input);
+ExecuteReturned execute(vector<Token> input);
 
-executeReturned execute(vector<Token> input, vector<VariableObject> init);
+ExecuteReturned execute(vector<Token> input, vector<VariableObject> init);
 
 
 struct FunctionReturned {
@@ -95,7 +95,7 @@ FunctionReturned runWithArgs(Function function, vector<Item> init) {
 	}
 
 	// TODO: add args
-	executeReturned result = execute(function.representation, variables);
+	ExecuteReturned result = execute(function.representation, variables);
 	if (result.exception.type == RETURN) {
 		if (not function.containType(result.item.type) and not function.isAnyType()) {
 			return Exception(TypeError);
@@ -453,18 +453,18 @@ struct FunctionDeclarationParsed {
 
 FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, int &index);
 
-struct ternaryReturned {
+struct TernaryReturned {
   Item item;
   Exception exception;
 
-  ternaryReturned(Item i, Exception e) : item(i), exception(e) {}
+  TernaryReturned(Item i, Exception e) : item(i), exception(e) {}
 
-  ternaryReturned(Item i) : item(i), exception(Nothing) {}
+  TernaryReturned(Item i) : item(i), exception(Nothing) {}
 
-  ternaryReturned(Exception e) : item(Item("")), exception(e) {}
+  TernaryReturned(Exception e) : item(Item("")), exception(e) {}
 };
 
-ternaryReturned parseTernary(const vector<Token> &input, int &index);
+TernaryReturned parseTernary(const vector<Token> &input, int &index);
 
 // TODO: add method call
 ParseExpressionReturned parseExpression(const vector<Token> &input, int &index) {

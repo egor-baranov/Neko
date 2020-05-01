@@ -276,23 +276,107 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 		}
 		return Item(static_cast<void *> (new Array(array)), "Array");
 	}
+	if (functionName == "mutableArrayOf") {
+		MutableArray array;
+		for (Item item : input) {
+			array.add(item);
+		}
+		return Item(static_cast<void *> (new MutableArray(array)), "MutableArray");
+	}
 	if (functionName == "arrayListOf") {
 		ArrayList arrayList;
 		for (Item item : input) {
 			arrayList.add(item);
 		}
+		return Item(static_cast<void *> (new ArrayList(arrayList)), "ArrayList");
 	}
 	if (functionName == "mutableArrayListOf") {
-		ArrayList arrayList;
+		MutableArrayList mutableArrayList;
 		for (Item item : input) {
-			arrayList.add(item);
+			mutableArrayList.add(item);
 		}
+		return Item(static_cast<void *> (new MutableArrayList(mutableArrayList)), "MutableArrayList");
 	}
 	if (functionName == "listOf") {
-
+		List list;
+		for (Item item : input) {
+			list.add(item);
+		}
+		return Item(static_cast<void *> (new List(list)), "List");
+	}
+	if (functionName == "mutableListOf") {
+		MutableList mutableList;
+		for (Item item : input) {
+			mutableList.add(item);
+		}
+		return Item(static_cast<void *> (new MutableList(mutableList)), "MutableList");
 	}
 	if (functionName == "setOf") {
-
+		Set set;
+		for (Item item : input) {
+			set.add(item);
+		}
+		return Item(static_cast<void *>(new Set(set)), "Set");
+	}
+	if (functionName == "mutableSetOf") {
+		MutableSet mutableSet;
+		for (Item item : input) {
+			mutableSet.add(item);
+		}
+		return Item(static_cast<void *>(new MutableSet(mutableSet)), "Set");
+	}
+	if (functionName == "len") {
+		if (input.size() > 1) {
+			return Exception(FunctionArgumentExcess);
+		}
+		if (input.size() == 0) {
+			return Exception(FunctionArgumentLack);
+		}
+		Item arg = input[0];
+		if (arg.type == "String") {
+			Int len = static_cast<String *>(arg.value)->length();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "Array") {
+			Int len = static_cast<Array *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "MutableArray") {
+			Int len = static_cast<MutableArray *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "ArrayList") {
+			Int len = static_cast<ArrayList *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "MutableArrayList") {
+			Int len = static_cast<MutableArrayList *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "List") {
+			Int len = static_cast<List *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "MutableList") {
+			Int len = static_cast<MutableList *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "Set") {
+			Int len = static_cast<Set *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "MutableSet") {
+			Int len = static_cast<MutableSet *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "Map") {
+			Int len = static_cast<Map *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
+		if (arg.type == "MutableMap") {
+			Int len = static_cast<MutableMap *>(arg.value)->content.size();
+			return Item(static_cast<void *>(new Int(len)), "Int");
+		}
 	}
 	return Exception(UndefinedNameUsage);
 }

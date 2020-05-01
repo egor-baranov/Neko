@@ -26,7 +26,8 @@ set<string> BuiltInClasses{
 	"Unit",
 	"Number", "Int", "Float", "Complex", "MathNum", "BigInt", "BigFloat", "BigComplex",
 	"Container",
-	"Array", "ArrayList",
+	"Array", "MutableArray",
+	"ArrayList", "MutableArrayList",
 	"List", "MutableList",
 	"Set", "MutableSet",
 	"Map", "MutableMap"
@@ -42,9 +43,11 @@ set<string> BuiltInFunctions{
 	"log", "log2", "log10", "ln", "lg",
 	"rad2Deg", "deg2Rad", "ceil", "floor",
 	"min", "max", "sum", "mul",
-	"arrayOf", "intArrayOf",
-	"arrayListOf", "listOf",
-	"setOf", "mapOf",
+	"arrayOf", "intArrayOf", "mutableArrayOf",
+	"arrayListOf", "mutableArrayListOf",
+	"listOf", "mutableListOf"
+	"setOf", "mutableSetOf",
+	"mapOf", "mutableMapOf",
 	"type",
 	"len"
 };
@@ -53,12 +56,12 @@ set<string> Keywords{
 	"var", "val",
 	"for", "while",
 	"if", "else", "elif",
-	"get", "set", "field", "value", "readOnly", "writeOnly", "property"
+	"get", "set", "field", "value", "readOnly", "writeOnly", "property",
 	"fun", "lambda", "return", "yield", "break", "continue",
 	"class", "this", "as", "is", "new", "delete",
 	"public", "private", "protected",
 	"static", "sealed", "abstract",
-	"virtual", "override"
+	"virtual", "override",
 	"from", "import",
 	"thread", "ref",
 	"until", "downTo", "step",

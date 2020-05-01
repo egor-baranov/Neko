@@ -7,14 +7,14 @@
 #include "ClassObject.hpp"
 #include "Constructions.hpp"
 
-Exception parseIfStatement(const vector<Token> &input, int &index);
+ExecuteReturned parseIfStatement(const vector<Token> &input, int &index);
 
 Exception formatException(Exception e, int lineIndex) {
 	if (e.line != -1) return e;
 	return Exception(e.type, lineIndex);
 }
 
-executeReturned executeScope(vector<Token> input) {
+ExecuteReturned executeScope(vector<Token> input) {
 	int index = 0;
 	if (input.back().type != EOfF) {
 		input.push_back(endOfFile);
@@ -69,18 +69,24 @@ executeReturned executeScope(vector<Token> input) {
 //			return formatException(exception, getLineIndex(input, index));
 //		}
 		if (token.source == "if") {
-			Exception exception = parseIfStatement(input, index);
-			if (exception.type == Nothing) {
+			ExecuteReturned result = parseIfStatement(input, index);
+			if (result.exception.type == Nothing) {
 				continue;
 			}
-			return formatException(exception, getLineIndex(input, index));
+			if (result.exception.type == RETURN) {
+				return result;
+			}
+			return formatException(result.exception, getLineIndex(input, index));
 		}
 		if (token.source == "while") {
-			Exception exception = parseWhileStatement(input, index);
-			if (exception.type == Nothing) {
+			ExecuteReturned result = parseWhileStatement(input, index);
+			if (result.exception.type == Nothing) {
 				continue;
 			}
-			return formatException(exception, getLineIndex(input, index));
+			if (result.exception.type == RETURN) {
+				return result;
+			}
+			return formatException(result.exception, getLineIndex(input, index));
 		}
 		if (token.source == "break") {
 			return Exception(BREAK);
@@ -112,14 +118,14 @@ executeReturned executeScope(vector<Token> input) {
 	return Exception(Nothing);
 }
 
-executeReturned execute(vector<Token> input) {
+ExecuteReturned execute(vector<Token> input) {
 	scopeManager.addScope();
-	executeReturned ret = executeScope(input);
+	ExecuteReturned ret = executeScope(input);
 	scopeManager.deleteLastScope();
 	return ret;
 }
 
-executeReturned execute(vector<Token> input, vector<VariableObject> init) {
+ExecuteReturned execute(vector<Token> input, vector<VariableObject> init) {
 	scopeManager.addScope();
 	for (VariableObject v: init) {
 		Exception exception = scopeManager.add(v);
@@ -127,7 +133,7 @@ executeReturned execute(vector<Token> input, vector<VariableObject> init) {
 			return exception;
 		}
 	}
-	executeReturned ret = executeScope(input);
+	ExecuteReturned ret = executeScope(input);
 	scopeManager.deleteLastScope();
 	return ret;
 }

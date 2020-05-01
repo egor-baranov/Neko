@@ -53,6 +53,9 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
+	{BREAK,                       "SyntaxError"},
+	{RETURN,                      "SyntaxError"},
+	{CONTINUE,                    "SyntaxError"},
 	{ValueError,                  "ValueError"},
 	{EmptyContainerError,         "EmptyContainerError"},
 	{ConstructorCallError,        "ConstructorCallError"},
@@ -114,7 +117,7 @@ struct Exception {
 
 // TODO: fix line index
 string errorMessage(Exception ex) {
-	return toString(ex.type); // + " in line " + to_string(ex.line);
+	return toString(ex.type) + " in line " + to_string(ex.line);
 }
 
 void throwException(Exception ex) {
@@ -251,9 +254,9 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
 				if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i - 1].type)) {
 					return Exception(SyntaxError, lineIndex);
 				}
-				if (input[i - 1].type == Keyword and input[i - 1].source != "else") {
-					return Exception(SyntaxError, lineIndex);
-				}
+//				if (input[i - 1].type == Keyword and input[i - 1].source != "else") {
+//					return Exception(SyntaxError, lineIndex);
+//				}
 			}
 			if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i + 1].type)) {
 				return Exception(SyntaxError, lineIndex);

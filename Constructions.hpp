@@ -58,7 +58,7 @@ struct InitializerListConstruction : BasicConstruction {
   }
 };
 
-Exception parseIfStatement(const vector<Token> &input, int &index) {
+ExecuteReturned parseIfStatement(const vector<Token> &input, int &index) {
 	if (input[index].source != "if") {
 		return Exception(SyntaxError, getLineIndex(input, index));
 	}
@@ -109,7 +109,10 @@ Exception parseIfStatement(const vector<Token> &input, int &index) {
 		}
 		index = nextIndex(input, index);
 		if (logicValue and not used) {
-			executeReturned result = execute(ifBody);
+			ExecuteReturned result = execute(ifBody);
+			if (result.exception.type == RETURN) {
+				return result;
+			}
 			if (result.exception.type != Nothing) {
 				return result.exception;
 			}
@@ -120,7 +123,7 @@ Exception parseIfStatement(const vector<Token> &input, int &index) {
 	return Exception(Nothing);
 }
 
-Exception parseWhileStatement(const vector<Token> &input, int &index) {
+ExecuteReturned parseWhileStatement(const vector<Token> &input, int &index) {
 	if (input[index].source != "while") {
 		return Exception(SyntaxError, getLineIndex(input, index));
 	}
@@ -165,7 +168,7 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 	index = nextIndex(input, index);
 	const int endIndex = index;
 	while (logicValue) {
-		executeReturned result = execute(whileBody);
+		ExecuteReturned result = execute(whileBody);
 		if (not contain({Nothing, CONTINUE}, result.exception.type)) {
 			if (result.exception.type == BREAK) {
 				break;
@@ -176,11 +179,11 @@ Exception parseWhileStatement(const vector<Token> &input, int &index) {
 		logicValue = static_cast<Bool *>(Calculate(parseExpression(input, index).source).item.value)->value;
 	}
 	index = endIndex;
-	return Nothing;
+	return Exception(Nothing);
 }
 
 // TODO: add parseForStatement
-Exception parseForStatement(const vector<Token> &input, int &index) {
+ExecuteReturned parseForStatement(const vector<Token> &input, int &index) {
 	if (input[index].source != "for") {
 		return Exception(SyntaxError, getLineIndex(input, index));
 	}
@@ -194,7 +197,7 @@ Exception parseForStatement(const vector<Token> &input, int &index) {
 	}
 }
 
-ternaryReturned parseTernary(const vector<Token> &input, int &index) {
+TernaryReturned parseTernary(const vector<Token> &input, int &index) {
 	if (input[index].source != "if") {
 		return Exception(SyntaxError, getLineIndex(input, index));
 	}
@@ -245,7 +248,6 @@ ternaryReturned parseTernary(const vector<Token> &input, int &index) {
 	Item item2 = calculationResult.item;
 	return logicValue ? item1 : item2;
 }
-
 
 
 #endif //NEKO_INTERPRETER_CONSTRUCTIONS_HPP

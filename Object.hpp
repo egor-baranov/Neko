@@ -81,6 +81,10 @@ class String : Object {
 	  }
 	  return Float(stold(ret));
   }
+
+  Int length() {
+  	return Int(value.size());
+  }
 };
 
 class NoneT : Object {
@@ -302,6 +306,8 @@ class Item {
 		  case FunctionType:
 			  return "FunctionObject";
 	  }
+	  // TODO: fix
+	  return "None";
 	  assert(false);
   }
 };
@@ -388,12 +394,12 @@ class Array : Container {
   }
 };
 
-class MutableArray : Array {
+class MutableArray : public Array {
   private:
   int length;
 
+  public:
   MutableArray() : length(0) {}
-
 };
 
 class Stack : Container {
@@ -441,8 +447,6 @@ class Queue : Container {
   int length;
   public:
   queue<Item> content;
-
-
 };
 
 class Deque : Container {
@@ -463,14 +467,22 @@ class ArrayList : Array {
   }
 };
 
-class List : Container {
+class MutableArrayList : public ArrayList {
+  private:
+  int length;
+
+  public:
+  MutableArrayList() : length(0) {}
+};
+
+class List : public Container {
   private:
   int length;
   public:
   list<Item> content;
 };
 
-class MutableList : List {
+class MutableList : public List {
   private:
   int length;
   public:
@@ -499,7 +511,7 @@ class Set : Container {
   Set(Container init) : length(0) {}
 };
 
-class MutableSet : Set {
+class MutableSet : public Set {
   private:
   int length;
   public:
