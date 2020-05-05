@@ -874,12 +874,12 @@ ConstructorReturned callConstructor(string className, vector<Item> &args) {
 			return Item(static_cast<void *>(new Range(arg0)), "Range");
 		}
 		Float arg1 = Float(
-			args[1].type == "Int" ? *static_cast<Int *>(args[0].value) : *static_cast<Float *>(args[0].value));
+			args[1].type == "Int" ? *static_cast<Int *>(args[1].value) : *static_cast<Float *>(args[1].value));
 		if (args.size() == 2) {
 			return Item(static_cast<void *>(new Range(arg0, arg1)), "Range");
 		}
 		Float arg2 = Float(
-			args[2].type == "Int" ? *static_cast<Int *>(args[0].value) : *static_cast<Float *>(args[0].value));
+			args[2].type == "Int" ? *static_cast<Int *>(args[2].value) : *static_cast<Float *>(args[2].value));
 		return Item(static_cast<void *>(new Range(arg0, arg1, arg2)), "Range");
 	}
 	if (className == "Function") {
