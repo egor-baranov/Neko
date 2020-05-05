@@ -4,18 +4,29 @@
 #include "expressions.hpp"
 
 FunctionReturned print(vector<Item> &input) {
-	int end = input.size() - 1;
-	for (int i = 0; i < end; ++i) {
-		printf("%s", (input[i].toString() + " ").c_str());
-	}
-	if (not input.empty()) {
-		printf("%s", input.back().toString().c_str());
+	int i = 0;
+	for (Item item : input) {
+		vector<Item> v = vector<Item>(1, item);
+		auto result = callConstructor("String", v);
+		if (result.exception.type != Nothing) {
+			return result.exception;
+		}
+		String s = *static_cast<String *> (result.item.value);
+		if (i + 1 < input.size()) {
+			printf("%s", (s.value + " ").c_str());
+		} else {
+			printf("%s", (s.value).c_str());
+		}
+		++i;
 	}
 	return VoidResult;
 }
 
 FunctionReturned println(vector<Item> &input) {
-	print(input);
+	auto result = print(input);
+	if (result.exception.type != Nothing) {
+		return result.exception;
+	}
 	printf("%s", "\n");
 	return VoidResult;
 }

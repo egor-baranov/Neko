@@ -58,7 +58,7 @@ vector<Token> parse(vector<Token> input) {
 			continue;
 		}
 		if (token.source == "." and input[i + 1].source == ".") {
-			output.push_back(Token(Range, ".."));
+			output.push_back(Token(RangeObject, ".."));
 			++i;
 			continue;
 		}

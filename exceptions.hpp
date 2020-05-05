@@ -117,7 +117,7 @@ struct Exception {
 
 // TODO: fix line index
 string errorMessage(Exception ex) {
-	return toString(ex.type) + " in line " + to_string(ex.line);
+	return toString(ex.type); // " in line " + to_string(ex.line);
 }
 
 void throwException(Exception ex) {
@@ -172,8 +172,9 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
 			continue;
 		}
 		// обработка CharFormatError
-		if (token.type == CharLiteral and token.source.size() != 3)
+		if (token.type == CharLiteral and token.source.size() != 3) {
 			return Exception(CharFormatError, lineIndex);
+		}
 		// обработка неправильных имен
 		if (token.type == Name and not isCorrectName(token.source) and not canBeDivided(token.source)) {
 			if (token.source[0] == '\"' or token.source[0] == '\'') {
@@ -261,9 +262,6 @@ Exception syntaxErrorAnalysis(vector<Token> input) {
 			if (contain({IntNumber, CharLiteral, StringLiteral, Constant}, input[i + 1].type)) {
 				return Exception(SyntaxError, lineIndex);
 			}
-			if (input[i + 1].type == Keyword and input[i + 1].source != "else") {
-				return Exception(SyntaxError, lineIndex);
-			}
 		}
 
 		if (token.source == ":") {
@@ -322,8 +320,8 @@ Exception semanticErrorAnalysis(vector<Token> input) {
 				return Exception(SyntaxError, lineIndex);
 			}
 		}
-		// SyntaxError для Range
-		if (token.type == Range) {
+		// SyntaxError для RangeObject
+		if (token.type == RangeObject) {
 			if (i == 0) return Exception(SyntaxError, lineIndex);
 			if (not prevToken.isRightBracket() and not prevToken.isObject()) {
 				return Exception(SyntaxError, lineIndex);

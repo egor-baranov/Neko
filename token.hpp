@@ -20,7 +20,7 @@ enum TokenType {
   Variable,
   ClassName,
   Operation,
-  Range, // {левая граница}..{правая граница}
+  RangeObject, // {левая граница}..{правая граница}
   LogicalOperator, // операторы
   ArithmeticOperator,
   AssignmentOperator,
@@ -59,8 +59,8 @@ string toString(TokenType t) {
 			return "ClassName";
 		case Operation:
 			return "Operation";
-		case Range:
-			return "Range";
+		case RangeObject:
+			return "RangeObject";
 		case LogicalOperator:
 			return "LogicalOperator";
 		case ArithmeticOperator:

@@ -43,6 +43,8 @@ class Float : Object {
   public:
   long double value;
 
+  Float(Int init) : value(init.value) {}
+
   Float(long double init) : value(init) {}
 };
 
@@ -83,7 +85,7 @@ class String : Object {
   }
 
   Int length() {
-  	return Int(value.size());
+	  return Int(value.size());
   }
 };
 
@@ -102,7 +104,7 @@ struct FunctionArgument {
   string name = "";
 };
 
-class Function : Object {
+class Function : public Object {
   private:
   set<string> type{"Any"};
 
@@ -134,7 +136,14 @@ class Function : Object {
 };
 
 class Range : Object {
+  public:
+  Float left, right, step;
 
+  Range(Float r) : left(0), right(r.value - 1), step(1) {}
+
+  Range(Float l, Float r) : left(l), right(r.value - 1), step(1) {}
+
+  Range(Float l, Float r, Float s) : left(l), right(r.value - 1), step(s) {}
 };
 
 string getType(Token token) {
@@ -304,7 +313,7 @@ class Item {
 		  case UndefinedType:
 			  return "UndefinedObject";
 		  case FunctionType:
-			  return "FunctionObject";
+			  return "Function";
 	  }
 	  // TODO: fix
 	  return "None";
@@ -675,7 +684,159 @@ ConstructorReturned callConstructor(string className, vector<Item> &args) {
 		if (args.size() == 0) {
 			return Item(static_cast<void *>(new String("")), "String");
 		}
-		return Exception(ConstructorCallError);
+		Item arg = args[0];
+		if (arg.type == "Int") {
+			Int v = *static_cast<Int *>(arg.value);
+			return Item(static_cast<void *>(new String(to_string(v.value))), "String");
+		}
+		if (arg.type == "Float") {
+			Float v = *static_cast<Float *>(arg.value);
+			string tmp = to_string(v.value);
+			return Item(static_cast<void *>(new String(formatFloatNumber(tmp))), "String");
+		}
+		if (arg.type == "Char") {
+			Char v = *static_cast<Char *>(arg.value);
+			return Item(static_cast<void *>(new String(string(1, v.value))), "String");
+		}
+		if (arg.type == "Bool") {
+			Bool v = *static_cast<Bool *>(arg.value);
+			return Item(static_cast<void *>(new String(v.value ? "True" : "False")), "String");
+		}
+		if (arg.type == "Range") {
+			Range r = *static_cast<Range *>(arg.value);
+			return Item(static_cast<void *>(new String(
+				"Range : { left : " + formatFloatNumber(to_string(r.left.value)) +
+				", right : " + formatFloatNumber(to_string(r.right.value)) +
+				", step : " + formatFloatNumber(to_string(r.step.value)) + " }"
+			)), "String");
+		}
+		if (arg.type == "Function") {
+			return Item(static_cast<void *>(new String("Function")), "String");
+		}
+		if (arg.type == "NoneType") {
+			return Item(static_cast<void *>(new String("None")), "String");
+		}
+		if (arg.type == "Array") {
+			Array v = *static_cast<Array *>(arg.value);
+			string s = "[";
+			int i = 0;
+			for (Item item : v.content) {
+				vector<Item> t = vector<Item>(1, item);
+				auto result = callConstructor("String", t);
+				if (result.exception.type != Nothing) {
+					return result.exception;
+				}
+				s += static_cast<String *> (result.item.value)->value + (i + 1 == v.content.size() ? "]" : ", ");
+				++i;
+			}
+			return Item(static_cast<void *>(new String(s)), "String");
+		}
+		if (arg.type == "MutableArray") {
+			MutableArray v = *static_cast<MutableArray *>(arg.value);
+			string s = "[";
+			int i = 0;
+			for (Item item : v.content) {
+				vector<Item> t = vector<Item>(1, item);
+				auto result = callConstructor("String", t);
+				if (result.exception.type != Nothing) {
+					return result.exception;
+				}
+				s += static_cast<String *> (result.item.value)->value + (i + 1 == v.content.size() ? "]" : ", ");
+				++i;
+			}
+			return Item(static_cast<void *>(new String(s)), "String");
+		}
+		if (arg.type == "ArrayList") {
+			ArrayList v = *static_cast<ArrayList *>(arg.value);
+			string s = "[";
+			int i = 0;
+			for (Item item : v.content) {
+				vector<Item> t = vector<Item>(1, item);
+				auto result = callConstructor("String", t);
+				if (result.exception.type != Nothing) {
+					return result.exception;
+				}
+				s += static_cast<String *> (result.item.value)->value + (i + 1 == v.content.size() ? "]" : ", ");
+				++i;
+			}
+			return Item(static_cast<void *>(new String(s)), "String");
+		}
+		if (arg.type == "MutableArray") {
+			MutableArrayList v = *static_cast<MutableArrayList *>(arg.value);
+			string s = "[";
+			int i = 0;
+			for (Item item : v.content) {
+				vector<Item> t = vector<Item>(1, item);
+				auto result = callConstructor("String", t);
+				if (result.exception.type != Nothing) {
+					return result.exception;
+				}
+				s += static_cast<String *> (result.item.value)->value + (i + 1 == v.content.size() ? "]" : ", ");
+				++i;
+			}
+			return Item(static_cast<void *>(new String(s)), "String");
+		}
+		if (arg.type == "List") {
+			List v = *static_cast<List *>(arg.value);
+			string s = "[";
+			int i = 0;
+			for (Item item : v.content) {
+				vector<Item> t = vector<Item>(1, item);
+				auto result = callConstructor("String", t);
+				if (result.exception.type != Nothing) {
+					return result.exception;
+				}
+				s += static_cast<String *> (result.item.value)->value + (i + 1 == v.content.size() ? "]" : ", ");
+				++i;
+			}
+			return Item(static_cast<void *>(new String(s)), "String");
+		}
+		if (arg.type == "MutableList") {
+			Array v = *static_cast<Array *>(arg.value);
+			string s = "[";
+			int i = 0;
+			for (Item item : v.content) {
+				vector<Item> t = vector<Item>(1, item);
+				auto result = callConstructor("String", t);
+				if (result.exception.type != Nothing) {
+					return result.exception;
+				}
+				s += static_cast<String *> (result.item.value)->value + (i + 1 == v.content.size() ? "]" : ", ");
+				++i;
+			}
+			return Item(static_cast<void *>(new String(s)), "String");
+		}
+		if (arg.type == "Set") {
+			Set v = *static_cast<Set *>(arg.value);
+			string s = "[";
+			int i = 0;
+			for (Item item : v.content) {
+				vector<Item> t = vector<Item>(1, item);
+				auto result = callConstructor("String", t);
+				if (result.exception.type != Nothing) {
+					return result.exception;
+				}
+				s += static_cast<String *> (result.item.value)->value + (i + 1 == v.content.size() ? "]" : ", ");
+				++i;
+			}
+			return Item(static_cast<void *>(new String(s)), "String");
+		}
+		if (arg.type == "MutableSet") {
+			MutableSet v = *static_cast<MutableSet *>(arg.value);
+			string s = "[";
+			int i = 0;
+			for (Item item : v.content) {
+				vector<Item> t = vector<Item>(1, item);
+				auto result = callConstructor("String", t);
+				if (result.exception.type != Nothing) {
+					return result.exception;
+				}
+				s += static_cast<String *> (result.item.value)->value + (i + 1 == v.content.size() ? "]" : ", ");
+				++i;
+			}
+			return Item(static_cast<void *>(new String(s)), "String");
+		}
+		return Item(static_cast<void *>(new String(arg.type)), "String");
 	}
 	if (className == "Char") {
 		if (args.size() > 1) {
@@ -695,6 +856,32 @@ ConstructorReturned callConstructor(string className, vector<Item> &args) {
 		}
 		return Exception(ConstructorCallError);
 	}
+	if (className == "Range") {
+		if (args.size() == 0) {
+			return Exception(FunctionArgumentLack);
+		}
+		if (args.size() > 3) {
+			return Exception(FunctionArgumentExcess);
+		}
+		for (Item item : args) {
+			if (item.type != "Float" and item.type != "Int") {
+				return Exception(TypeError);
+			}
+		}
+		Float arg0 = Float(
+			args[0].type == "Int" ? *static_cast<Int *>(args[0].value) : *static_cast<Float *>(args[0].value));
+		if (args.size() == 1) {
+			return Item(static_cast<void *>(new Range(arg0)), "Range");
+		}
+		Float arg1 = Float(
+			args[1].type == "Int" ? *static_cast<Int *>(args[0].value) : *static_cast<Float *>(args[0].value));
+		if (args.size() == 2) {
+			return Item(static_cast<void *>(new Range(arg0, arg1)), "Range");
+		}
+		Float arg2 = Float(
+			args[2].type == "Int" ? *static_cast<Int *>(args[0].value) : *static_cast<Float *>(args[0].value));
+		return Item(static_cast<void *>(new Range(arg0, arg1, arg2)), "Range");
+	}
 	if (className == "Function") {
 		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
@@ -713,7 +900,19 @@ ConstructorReturned callConstructor(string className, vector<Item> &args) {
 		}
 		return Exception(ConstructorCallError);
 	}
+	if (className == "MutableArray") {
+		if (args.size() > 1) {
+			return Exception(FunctionArgumentExcess);
+		}
+		return Exception(ConstructorCallError);
+	}
 	if (className == "ArrayList") {
+		if (args.size() > 1) {
+			return Exception(FunctionArgumentExcess);
+		}
+		return Exception(ConstructorCallError);
+	}
+	if (className == "MutableArrayList") {
 		if (args.size() > 1) {
 			return Exception(FunctionArgumentExcess);
 		}

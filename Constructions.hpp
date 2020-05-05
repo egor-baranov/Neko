@@ -195,6 +195,12 @@ ExecuteReturned parseForStatement(const vector<Token> &input, int &index) {
 	if (input[index].type != Name) {
 		return Exception(SyntaxError, getLineIndex(input, index));
 	}
+	string variableName = input[index].source;
+	index = nextIndex(input, index);
+	if (input[index].source != "in") {
+		return Exception(SyntaxError, getLineIndex(input, index));
+	}
+	index = nextIndex(input, index);
 }
 
 TernaryReturned parseTernary(const vector<Token> &input, int &index) {
