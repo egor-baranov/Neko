@@ -37,7 +37,7 @@ set<string> BuiltInClasses{
 set<string> BuiltInFunctions{
 	"print", "println",
 	"readLine", "readInt", "readFloat", "readChar", "readString", "readBool",
-	"abs", "sqr", "sqrt",
+	"abs", "sqr", "sqrt", "pow", "pow2"
 	"sin", "cos", "tg", "tan", "ctg", "ctan",
 	"asin", "acos", "atan", "atan2",
 	"log", "log2", "log10", "ln", "lg",
@@ -49,7 +49,10 @@ set<string> BuiltInFunctions{
 	"setOf", "mutableSetOf",
 	"mapOf", "mutableMapOf",
 	"type",
-	"len"
+	"len",
+	"getAt", // получение элемента по индексу getAt(Container, index)
+	"setAt", // изменение элекмента по индексу setAt(Container, index, value)
+	"slice" // подотрезок в массиве или строке
 };
 
 set<string> Keywords{

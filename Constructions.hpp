@@ -170,6 +170,9 @@ ExecuteReturned parseWhileStatement(const vector<Token> &input, int &index) {
 	while (logicValue) {
 		ExecuteReturned result = execute(whileBody);
 		if (not contain({Nothing, CONTINUE}, result.exception.type)) {
+			if (result.exception.type == RETURN) {
+				return result;
+			}
 			if (result.exception.type == BREAK) {
 				break;
 			}
@@ -201,6 +204,16 @@ ExecuteReturned parseForStatement(const vector<Token> &input, int &index) {
 		return Exception(SyntaxError, getLineIndex(input, index));
 	}
 	index = nextIndex(input, index);
+	auto result = parseExpression(input, index);
+	if (result.source.content.size() != 1 or input[index].source != ")") {
+		return Exception(SyntaxError, getLineIndex(input, index));
+	}
+	index = nextIndex(input, index);
+	if (input[index].source != "{") {
+		return Exception(SyntaxError, getLineIndex(input, index));
+	}
+
+	// TODO: For body and execution
 }
 
 TernaryReturned parseTernary(const vector<Token> &input, int &index) {

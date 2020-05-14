@@ -128,7 +128,7 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 		 "sin", "cos", "tg", "tan", "ctg", "ctan",
 		 "asin", "acos", "atan",
 		 "log2", "log10", "ln", "lg",
-		 "rad2Deg", "deg2Rad", "ceil", "floor",
+		 "rad2Deg", "deg2Rad", "ceil", "floor", "pow2"
 		}, functionName)) {
 		if (input.size() == 0) {
 			return Exception(FunctionArgumentLack);
@@ -158,6 +158,9 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 		}
 		if (functionName == "cos") {
 			x = cos(x);
+		}
+		if (functionName == "pow2") {
+			x = pow(2, x);
 		}
 		if (contain({"tg", "tan"}, functionName)) {
 			if (cos(x) == 0) return Exception(MathError);
@@ -388,7 +391,129 @@ FunctionReturned callBuiltInFunction(string functionName, vector<Item> &input) {
 			Int len = static_cast<MutableMap *>(arg.value)->content.size();
 			return Item(static_cast<void *>(new Int(len)), "Int");
 		}
+		return Exception(FunctionCallError);
 	}
+
+	if (functionName == "slice") {
+		if (input.size() <= 1) {
+			return Exception(FunctionArgumentLack);
+		}
+		if (input.size() > 3) {
+			return Exception(FunctionArgumentExcess);
+		}
+
+		if (input[1].type != "Int" or input[2].type != "Int") {
+			return Exception(TypeError);
+		}
+
+		long long left = static_cast<Int *>(input[1].value)->value, right = static_cast<Int *>(input[2].value)->value;
+
+		if (input[0].type == "String") {
+			string s = static_cast<String *>(input[0].value)->value;
+			if (left < 0 or right >= s.size()) {
+				return Exception(IndexError);
+			}
+			string ret;
+			for (int i = left; i <= right; ++i) {
+				ret += s[i];
+			}
+			return Item(static_cast<void *>(new String(ret)), "String");
+		}
+		if (input[0].type == "Array") {
+			vector<Item> v = static_cast<Array *>(input[0].value)->content;
+			if (left < 0 or right >= v.size()) {
+				return Exception(IndexError);
+			}
+			vector<Item> ret;
+			for (int i = left; i <= right; ++i) {
+				ret.push_back(v[i]);
+			}
+			return Item(static_cast<void *>(new Array(ret)), "Array");
+		}
+		if (input[0].type == "MutableArray") {
+			vector<Item> v = static_cast<MutableArray *>(input[0].value)->content;
+			if (left < 0 or right >= v.size()) {
+				return Exception(IndexError);
+			}
+			vector<Item> ret;
+			for (int i = left; i <= right; ++i) {
+				ret.push_back(v[i]);
+			}
+			return Item(static_cast<void *>(new MutableArray(ret)), "MutableArray");
+		}
+		return Exception(FunctionCallError);
+	}
+
+	if (functionName == "getAt") {
+		if (input.size() <= 1) {
+			return Exception(FunctionArgumentLack);
+		}
+		if (input.size() > 2) {
+			return Exception(FunctionArgumentExcess);
+		}
+
+		if (input[1].type != "Int") {
+			return Exception(TypeError);
+		}
+
+		long long index = static_cast<Int *>(input[1].value)->value;
+
+		if (input[0].type == "String") {
+			string s = static_cast<String *>(input[0].value)->value;
+			if (index < 0 or index >= s.size()) {
+				return Exception(IndexError);
+			}
+			return Item(static_cast<void *>(new Char(s[index])), "Char");
+		}
+		if (input[0].type == "Array") {
+			vector<Item> v = static_cast<Array *>(input[0].value)->content;
+			if (index < 0 or index >= v.size()) {
+				return Exception(IndexError);
+			}
+			return v[index];
+		}
+		if (input[0].type == "MutableArray") {
+			vector<Item> v = static_cast<Array *>(input[0].value)->content;
+			if (index < 0 or index >= v.size()) {
+				return Exception(IndexError);
+			}
+			return v[index];
+		}
+		return Exception(FunctionCallError);
+	}
+	// TODO: доделать все ниже
+	if (functionName == "setAt") {
+		if (input.size() <= 2) {
+			return Exception(FunctionArgumentLack);
+		}
+		if (input.size() > 3) {
+			return Exception(FunctionArgumentExcess);
+		}
+
+		if (input[1].type != "Int") {
+			return Exception(TypeError);
+		}
+
+		long long index = static_cast<Int *>(input[1].value)->value;
+		Item value = input[2];
+
+		if (input[0].type == "String") {
+			return Exception(ImmutabilityError);
+		}
+		if (input[0].type == "Array") {
+			return Exception(ImmutabilityError);
+		}
+		if (input[0].type == "MutableArray") {
+			vector<Item> v = static_cast<MutableArray *>(input[0].value)->content;
+			if (index < 0 or index >= v.size()) {
+				return Exception(IndexError);
+			}
+			v[index] = value;
+			return Item(static_cast<void *>(new MutableArray(v)), "MutableArray");
+		}
+		return Exception(FunctionCallError);
+	}
+
 	return Exception(UndefinedNameUsage);
 }
 

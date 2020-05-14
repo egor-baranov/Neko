@@ -17,6 +17,7 @@ bool operator==(Function a, Function b) {
 	return a.name == b.name;
 }
 
+// TODO: добавить перегрузку функций
 FunctionDeclarationParsed parseFunctionDeclaration(const vector<Token> &input, int &index) {
 	if (input.size() - index < 6) {
 		return Exception(FunctionDeclarationError, getLineIndex(input, index));

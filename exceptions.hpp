@@ -10,6 +10,7 @@ enum ExType {
   BREAK, // служебные возвращаемые значения, показывающие, почему цикл был прерван или функция вернула значение
   CONTINUE,
   RETURN,
+  ImmutabilityError, // попытка изменить неизменяемый объект
   ValueError, // Int("2..")
   EmptyContainerError, // напр. pop от пустого стека
   ConstructorCallError, // ошибка вызова конструктора
@@ -53,6 +54,7 @@ enum ExType {
 };
 
 map<ExType, string> ExTypeToString{
+	{ImmutabilityError,           "ImmutabilityError"},
 	{BREAK,                       "SyntaxError"},
 	{RETURN,                      "SyntaxError"},
 	{CONTINUE,                    "SyntaxError"},

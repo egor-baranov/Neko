@@ -11,8 +11,6 @@ using namespace std;
 class Object {
   public:
 
-  void *value;
-
   // сериализация объекта в JSON, в будущем возвращает JSONObject
   virtual void serialize() {};
 
@@ -30,6 +28,7 @@ class Object {
 
   // битовое представление объекта в памяти
   virtual void bit() {};
+  void *value;
 };
 
 class Int : Object {
@@ -390,6 +389,7 @@ class Array : Container {
 
   Exception add(Item item) {
 	  this->content.push_back(item);
+	  this->length += 1;
   }
 
   Array() : length(0) {}
@@ -401,6 +401,11 @@ class Array : Container {
 		  this->add(item);
 	  }
   }
+
+  Array(vector<Item> init) {
+	  this->content = init;
+	  this->length = init.size();
+  }
 };
 
 class MutableArray : public Array {
@@ -409,6 +414,11 @@ class MutableArray : public Array {
 
   public:
   MutableArray() : length(0) {}
+
+  MutableArray(vector<Item> init) {
+	  this->content = init;
+	  this->length = init.size();
+  }
 };
 
 class Stack : Container {
@@ -623,6 +633,54 @@ string formatString(string inp) {
 	}
 	return ret;
 }
+
+vector<Item> getContent(Item item) {
+	if (item.type == "Array") {
+		return static_cast<Array *>(item.value)->content;
+	}
+	if (item.type == "MutableArray") {
+		return static_cast<MutableArray *>(item.value)->content;
+	}
+	if (item.type == "ArrayList") {
+		return static_cast<ArrayList *>(item.value)->content;
+	}
+	if (item.type == "MutableArrayList") {
+		return static_cast<MutableArrayList *>(item.value)->content;
+	}
+	if (item.type == "List") {
+		list<Item> l = static_cast<List *>(item.value)->content;
+		vector<Item> ret;
+		for (Item i : l) {
+			ret.push_back(i);
+		}
+		return ret;
+	}
+	if (item.type == "MutableList") {
+		list<Item> l = static_cast<MutableList *>(item.value)->content;
+		vector<Item> ret;
+		for (Item i : l) {
+			ret.push_back(i);
+		}
+		return ret;
+	}
+	if (item.type == "Set") {
+		set<Item> s = static_cast<Set *>(item.value)->content;
+		vector<Item> ret;
+		for (Item i : s) {
+			ret.push_back(i);
+		}
+		return ret;
+	}
+	if (item.type == "MutableSet") {
+		set<Item> s = static_cast<MutableSet *>(item.value)->content;
+		vector<Item> ret;
+		for (Item i : s) {
+			ret.push_back(i);
+		}
+		return ret;
+	}
+}
+
 
 ConstructorReturned callConstructor(string className, vector<Item> &args) {
 	if (contain({"Object", "Container", "Any", "Unit"}, className)) {
