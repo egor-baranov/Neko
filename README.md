@@ -1,4 +1,4 @@
-# Neko-Interpreter
+# Neko
 
 Neko is a scripting programming language inspired by Kotlin and Python, which is being developed for writing fast and powerful code in a short amount of time. It includes following techniques:
 
